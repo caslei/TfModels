@@ -1,0 +1,2 @@
+# download the specified dataset
+python download_and_convert_data.py --dataset_name=flowers --dataset_dir=/tmp/flowers
