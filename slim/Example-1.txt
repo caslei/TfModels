@@ -1,0 +1,102 @@
+# From the website: http://www.ctolib.com/topics-114367.html
+
+reduce_mean(-tf.reduce_sum(y_*tf.log(y),reduction_indices=[1]))
+# tf.reduce_sum:将每一个Tensor‘安列的方向’进行求和运算
+# 参考： https://www.zhihu.com/question/51325408?from=profile_question_card
+
+
+tf.global_variables_initializer().run() 
+# 该语句等价于 
+#		init = tf.global_variables_initializer()
+#		sess.run(init)
+
+
+for i in range(1000):
+    batch_x,batch_y = mnist.train.next_batch(100)
+    train_step.run({x:batch_x,y_:batch_y})
+# 将数据样本和对应的标签 传递给 x和y
+# 该语句等价于 
+#		for i in range(1000):
+#		batch_x, batch_y = mnist.train.next_batch(100)
+#		sess.run(train_step, feed_dict={x:batch_x, y_:batch_y})
+
+
+
+correct_prediction = tf.equal(tf.argmax(y,1),tf.argmax(y_,1))       #高维度的
+
+print(sess.run(tf.argmax(y,1),feed_dict={x:batch_x}))				#输出tf.argmax的值
+print(sess.run(tf.argmax(y_,1),feed_dict={y_:batch_y}))				#输出tf.argmax的值
+# sess.run()函数执行运算时，必须通过feed_dict={}提供输入
+
+acuracy = tf.reduce_mean(tf.cast(correct_prediction,tf.float32))    #要用reduce_mean
+
+print(acuracy.eval({x:mnist.test.images,y_:mnist.test.labels}))
+## 该语句等价于 
+#		print(sess.run(acuracy, feed_dict={x:mnist.test.images,y_:mnist.test.labels}))
+
+
+
+#------------------------------------
+#  全部代码如下
+#------------------------------------
+
+import tensorflow as tf
+from tensorflow.examples.tutorials.mnist import input_data
+mnist = input_data.read_data_sets('MNIST_data/',one_hot=True)
+
+print(mnist.train.images.shape)
+print(mnist.train.labels.shape)
+print(mnist.test.images.shape)
+print(mnist.test.labels.shape)
+print(mnist.validation.images.shape)
+print(mnist.validation.labels.shape)
+
+
+sess = tf.InteractiveSession()
+
+#real data
+x = tf.placeholder(tf.float32,[None,784])
+y_ = tf.placeholder(tf.float32,[None,10])
+W = tf.Variable(tf.zeros([784,10]))
+b = tf.Variable(tf.zeros([10]))
+
+#predict
+y = tf.nn.softmax(tf.matmul(x,W)+b)
+cross_entropy = tf.reduce_mean(-tf.reduce_sum(y_*tf.log(y),reduction_indices=[1]))
+
+#train ways
+train_step = tf.train.GradientDescentOptimizer(0.5).minimize(cross_entropy)
+
+
+##重点,全局参数初始化
+tf.global_variables_initializer().run()
+
+##迭代1000次,每次取出100个样本进行训练SGD
+for i in range(1000):
+    batch_x,batch_y = mnist.train.next_batch(100)
+    train_step.run({x:batch_x,y_:batch_y})
+
+
+#test
+correct_prediction = tf.equal(tf.argmax(y,1),tf.argmax(y_,1))
+acuracy = tf.reduce_mean(tf.cast(correct_prediction,tf.float32))
+print(acuracy.eval({x:mnist.test.images,y_:mnist.test.labels}))
+
+
+
+#------------------------------------------------------
+# 注意 tf.Session()和 tf.InteractiveSession() 之间的区别
+# Session()的应用方法如下：
+# sess = tf.Session()
+# sess.run(TensorName, feed_dict={x: Xdata, y: Ydata})
+# init = tf.global_variables_initializer()
+# sess.run(init)
+# sess.run(train_step, feed_dict={x： batch_x, y_: batch_y})
+# sess.run(accuracy, feed_dict={x： batch_x, y_: batch_y})
+#
+# IterativeSession()的应用方法为：
+# sess = tf.InteractiveSsession()
+# tf.global_variables_initializer().run()
+# train_step.run({x:batch_x, y:batch_y})
+# accuracy.eval({x： batch_x, y_: batch_y})
+#------------------------------------------------------
