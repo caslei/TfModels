@@ -1,0 +1,5 @@
+
+# From the website 
+#	http://stackoverflow.com/questions/40350539/tfslim-problems-loading-saved-checkpoint-for-vgg16
+#
+#	TFSlim - problems loading saved checkpoint for VGG16
