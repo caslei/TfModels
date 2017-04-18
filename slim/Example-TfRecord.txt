@@ -1,6 +1,9 @@
 # From the website: 
 #	http://warmspringwinds.github.io/tensorflow/tf-slim/2016/12/21/tfrecords-guide/
 
+# 使用ipython %matplotlib inline 
+# From thw website:
+#	http://blog.csdn.net/u010194274/article/details/50698514
 
 %matplotlib inline
 
