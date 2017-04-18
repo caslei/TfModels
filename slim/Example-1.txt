@@ -100,3 +100,8 @@ print(acuracy.eval({x:mnist.test.images,y_:mnist.test.labels}))
 # train_step.run({x:batch_x, y:batch_y})
 # accuracy.eval({x： batch_x, y_: batch_y})
 #------------------------------------------------------
+
+
+
+# 继续跟进此人的blog------------------------
+# http://warmspringwinds.github.io/blog/
