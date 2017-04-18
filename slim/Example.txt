@@ -98,14 +98,17 @@ with tf.Graph().as_default():
 	plt.imshow(np_image.astype(np.uint8))
 	plt.suptitle("Downloaded image", fontsize=14, fontweight='bold')
 	plt.axis('off')
+	plt.ion()
 	plt.show()
 
 	# 显示最终传入网络模型的图片
 	# 图像的像素值做了[-1, 1]的归一化
 	# to show the image.
+	plt.figure()
 	plt.imshow( network_input / (network_input.max() - network_input.min()) )
 	plt.suptitle("Resized, Cropped and Mean-Centered input to network", fontsize=14, fontweight='bold')
 	plt.axis('off')
+	plt.ion()
 	plt.show()
 
 	names = imagenet.create_readable_names_for_imagenet_labels()
@@ -201,3 +204,11 @@ for index, current_class_number in enumerate(unique_classes):
     labels_names.append(str(index) + ' ' + names[current_class_number+1])
 
 discrete_matshow(data=relabeled_image, labels_names=labels_names, title="Segmentation")
+
+
+
+
+##---------------------------------------------------------------------------------------------
+## 以上两例都使用VGG-16模型对图像做分类和分割，也可以选用其它占用内存少的网络模型（如AlexNet）进行处理。
+## 电脑配置不高的情况下，进了使用耗内存少的模型，这是比较方便验证算法有效性的。
+##---------------------------------------------------------------------------------------------
