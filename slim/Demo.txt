@@ -222,3 +222,28 @@ python train_image_classifier.py
   --log_every_n_steps=10
   --optimizer=rmsprop
   --weight_decay=0.00004  
+
+
+
+
+###-------------------------------------------------------------------------------
+# From the website: https://github.com/caslei/TfModels/tree/master/slim
+###-------------------------------------------------------------------------------
+
+# Creating a TF-Slim Dataset Descriptor
+
+import tensorflow as tf
+from datasets import flowers
+
+slim = tf.contrib.slim
+
+# Selects the 'validation' dataset
+dataset = flowers.get_split('validation', "C:\\tmp\\flowers")
+
+# Creates a TF-Slim DataProvider which reads the dataset in 
+# the background during both training and testing  
+provider = slim.dataset_data_provider.DatasetDataProvider(dataset)
+[image, label] = provider.get(['image', 'label'])
+
+sess = tf.InteractiveSession()
+image.eval()
