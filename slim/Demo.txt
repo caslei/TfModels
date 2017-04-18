@@ -1,6 +1,8 @@
 # download the specified dataset
 python download_and_convert_data.py --dataset_name=flowers --dataset_dir=/tmp/flowers
 
+python download_and_convert_data.py --dataset_name=caltech256 --dataset_dir=/tmp/caltech256
+
 
 
 # From the website: http://euhyeji.blogspot.com/2017/01/tensorflow-slim-22.html
@@ -54,9 +56,169 @@ python train_image_classifier.py --train_dir=\tmp\train_inception_resnet_v2_flo
 
 
 
+##----------------------------------------------------------------
+# Implementing deep learning based on caltech256 dataset
+##----------------------------------------------------------------
+
+# From the website: http://euhyeji.blogspot.com/2017/02/tensorflow-slim-33.html
+
+# Fine-tune only the new layers for 1000 steps
+python train_image_classifier.py
+  --train_dir=\tmp\train_inception_v1_caltech256_FineTune_logs
+  --dataset_name=caltech256
+  --dataset_split_name=train
+  --dataset_dir=\tmp\caltech256
+  --model_name=inception_v1
+  --checkpoint_path=\tmp\my_checkpoints/inception_v1.ckpt
+  --checkpoint_exclude_scopes=InceptionV1/Logits
+  --trainable_scopes=InceptionV1/Logits
+  --max_number_of_steps=1000
+  --batch_size=16
+  --learning_rate=0.01
+  --learning_rate_decay_type=fixed
+  --save_interval_secs=60
+  --save_summaries_secs=60
+  --log_every_n_steps=100
+  --optimizer=rmsprop
+  --weight_decay=0.00004
+
+
+# Fine-tune all the new layers for 500 steps
+ python train_image_classifier.py
+  --train_dir=\tmp\train_inception_v1_caltech256_FineTune_logs\all
+  --dataset_name=caltech256
+  --dataset_split_name=train
+  --dataset_dir=\tmp\caltech256
+  --model_name=inception_v1
+  --checkpoint_path=\tmp\train_inception_v1_caltech256_FineTune_logs
+  --max_number_of_steps=500
+  --batch_size=16
+  --learning_rate=0.0001
+  --learning_rate_decay_type=fixed
+  --save_interval_secs=60
+  --save_summaries_secs=60
+  --log_every_n_steps=10
+  --optimizer=rmsprop
+  --weight_decay=0.00004
+
+
+# Evaluation the trained model
+ python eval_image_classifier.py
+  --alsologtostderr
+  --checkpoint_path=\tmp\train_inception_v1_caltech256_FineTune_logs\all\
+  --dataset_dir=\tmp\caltech256
+  --dataset_name=caltech256
+  --dataset_split_name=validation
+  --model_name=inception_v1
 
 
 
 
 
 
+##----------------------------------------------------------------
+# Implementing deep learning based on caltech256 dataset
+##----------------------------------------------------------------
+
+# From the website: http://euhyeji.blogspot.kr/2017/01/tensorflow-slim-231.html
+
+ python eval_image_classifier.py
+  --alsologtostderr
+  --checkpoint_path=\tmp\train_inception_v1_flowers_logs\
+  --dataset_dir=\tmp\flowers
+  --dataset_name=flowers
+  --dataset_split_name=validation
+  --model_name=inception_v1
+
+
+
+
+ python eval_image_classifier.py
+  --alsologtostderr
+  --checkpoint_path=\tmp\train_inception_v1_flowers_FineTune_logs\
+  --dataset_dir=\tmp\flowers
+  --dataset_name=flowers
+  --dataset_split_name=validation
+  --model_name=inception_v1
+
+
+
+ python eval_image_classifier.py
+  --alsologtostderr
+  --checkpoint_path=\tmp\train_inception_v1_flowers_FineTune_logs\all\
+  --dataset_dir=\tmp\flowers
+  --dataset_name=flowers
+  --dataset_split_name=validation
+  --model_name=inception_v1
+
+
+
+###-------------------------------------------------------------------------------
+# From the website: http://euhyeji.blogspot.com/2017/01/tensorflow-slim-221.html
+###-------------------------------------------------------------------------------
+
+# Test on my office computer
+
+# Training a model from scratch
+
+python train_image_classifier.py
+	--train_dir=\tmp\train_inception_v1_flowers_logs
+	--dataset_name=flowers
+	--dataset_split_name=train
+	--dataset_dir=\tmp\flowers
+	--batch_size=16
+	--model_name=inception_v1
+
+# Fine-tuning a model from an existing checkpoint
+
+python train_image_classifier.py
+  --train_dir=\tmp\train_inception_v1_flowers_FineTune_logs
+  --dataset_name=flowers
+  --dataset_split_name=train
+  --dataset_dir=\tmp\flowers
+  --model_name=inception_v1
+
+  # first download inception_v1_2016_08_28.tar.gz, unpack and
+  # copy inception_v1.ckpt file to \tmp\my_checkpoints folder.
+
+  --checkpoint_path=\tmp\my_checkpoints/inception_v1.ckpt
+
+  # the following two parameters are the variables that will be 
+  # learned only the last layer.
+
+  --checkpoint_exclude_scopes=InceptionV1/Logits
+  --trainable_scopes=InceptionV1/Logits
+
+  --max_number_of_steps=1000
+  --batch_size=16
+  --learning_rate=0.01
+  --learning_rate_decay_type=fixed
+  --save_interval_secs=60
+  --save_summaries_secs=60
+  --log_every_n_steps=100
+  --optimizer=rmsprop
+  --weight_decay=0.00004
+
+
+
+# Fine-tune all the new layers for 500 steps
+
+ python train_image_classifier.py
+  --train_dir=\tmp\train_inception_v1_flowers_FineTune_logs\all
+  --dataset_name=flowers
+  --dataset_split_name=train
+  --dataset_dir=\tmp\flowers
+  --model_name=inception_v1
+
+  # the model created above step was designated as checkpoint_path.
+  --checkpoint_path=\tmp\train_inception_v1_flowers_FineTune_logs
+  
+  --max_number_of_steps=500
+  --batch_size=16
+  --learning_rate=0.0001
+  --learning_rate_decay_type=fixed
+  --save_interval_secs=60
+  --save_summaries_secs=60
+  --log_every_n_steps=10
+  --optimizer=rmsprop
+  --weight_decay=0.00004  
