@@ -20,7 +20,7 @@ python train_image_classifier.py --train_dir=\tmp\train_inception_resnet_v2_flow
 				 --dataset_dir=\tmp\flowers 
 				 --model_name=inception_resnet_v2 
 				 --checkpoint_path=\tmp\my_checkpoints\inception_resnet_v2_2016_08_30.ckpt
- 				 --checkpoint_exclude_scopes=InceptionResnetV2/Logits,InceptionResnetV2/AuxLogits 
+				 --checkpoint_exclude_scopes=InceptionResnetV2/Logits,InceptionResnetV2/AuxLogits 
 				 --trainable_scopes=InceptionResnetV2/Logits,InceptionResnetV2/AuxLogits
 				 --max_number_of_steps=1000 
 				 --batch_size=32 
@@ -37,7 +37,7 @@ python train_image_classifier.py --train_dir=\tmp\train_inception_resnet_v2_flow
 # Fine-tune all the new layers for 500 steps
 python train_image_classifier.py --train_dir=\tmp\train_inception_resnet_v2_flowers_FineTune_logs\all
   				 --dataset_name=flowers
-				 --dataset_split_name=train
+ 				 --dataset_split_name=train
  				 --dataset_dir=\tmp\flowers
  				 --model_name=inception_resnet_v2
  				 --checkpoint_path=\tmp\train_inception_resnet_v2_flowers_FineTune_logs
