@@ -17,14 +17,14 @@ sess = tf.Session()
 sess.run(init_op)
 
 # Save the variables to disk
-save_path = saver.save(sess, "U:/temp/model.ckpt")
+save_path = saver.save(sess, "U:\\temp\\model.ckpt")
 
 
 
 #-----------------------------------
 
 # Restore variables from disk
-saver.restore(sess, "U:/temp/model.ckpt")
+saver.restore(sess, "U:\\temp\\model.ckpt")
 
 
 
