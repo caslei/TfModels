@@ -1,0 +1,3 @@
+# From the website: http://blog.csdn.net/jyshee/article/details/52566152
+
+# TensorFlow的几种输入方法
