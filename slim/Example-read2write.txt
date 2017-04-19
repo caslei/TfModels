@@ -1,0 +1,30 @@
+# Saving Variables
+
+# Create a 'Saver' with 'tf.train.Saver()' to manage all variables in the model.
+
+# Create some variables.
+v1 = tf.Variable(3.0, name="v1")
+v2 = tf.Variable(2.0, name="v2")
+
+# Add an op to initialize the variables
+init_op = tf.global_variables_initializer()
+
+# Add ops to save and restore all the variables
+saver = tf.train.Saver()
+
+sess = tf.Session()
+
+sess.run(init_op)
+
+# Save the variables to disk
+save_path = saver.save(sess, "U:/temp/model.ckpt")
+
+
+
+#-----------------------------------
+
+# Restore variables from disk
+saver.restore(sess, "U:/temp/model.ckpt")
+
+
+
