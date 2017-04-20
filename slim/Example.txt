@@ -212,3 +212,17 @@ discrete_matshow(data=relabeled_image, labels_names=labels_names, title="Segment
 ## 以上两例都使用VGG-16模型对图像做分类和分割，也可以选用其它占用内存少的网络模型（如AlexNet）进行处理。
 ## 电脑配置不高的情况下，进了使用耗内存少的模型，这是比较方便验证算法有效性的。
 ##---------------------------------------------------------------------------------------------
+
+
+
+
+
+
+#------------------------------------------------
+ import os
+	import实际是将os.py的文件载入指定文件中，
+
+ import matplotlib.pyplot as plt
+ 	表示将matplotlib文件夹下的pyplot.py载入指定文件中
+
+
