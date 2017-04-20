@@ -225,4 +225,12 @@ discrete_matshow(data=relabeled_image, labels_names=labels_names, title="Segment
  import matplotlib.pyplot as plt
  	表示将matplotlib文件夹下的pyplot.py载入指定文件中
 
+#------------------------------------------------
+
+ python程序中，以逗号分隔的变量被默认为元组(tuple)
+
+
+
+
+
 
