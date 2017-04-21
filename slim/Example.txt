@@ -216,7 +216,8 @@ discrete_matshow(data=relabeled_image, labels_names=labels_names, title="Segment
 
 
 
-
+#----------------------------------------
+  break 和continue的中断功能，具有“就近原则”，即：只有其最近的循环有关，与其他循环没半毛钱关系
 
 #------------------------------------------------
  python程序中，以逗号分隔的变量被默认为元组(tuple)
