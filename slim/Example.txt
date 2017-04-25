@@ -475,3 +475,10 @@ assert len(lists) >=5,'列表元素个数小于5'
 assert 2==1,'2不等于1'
 
 
+#--------------------------------------------
+python -c "import tensorflow as tf; help(tf.ones)"   >  tf.ones.txt
+
+$ python -c "import os; import inspect; import tensorflow; print(os.path.dirname(inspect.getfile(tensorflow)))"  > dirname.txt
+
+# 非常实用的管道符与帮助信息
+#--------------------------------------------
