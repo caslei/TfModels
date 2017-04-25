@@ -488,4 +488,7 @@ $ python -m tensorflow.tensorboard --logdir= C:/tmp/segmentation/log_folder
 #
 #--------------------------------------------
 
-
+# tf.reshape(tensor, shape)函数中如果shape中有特殊值-1，表明在其他维度数确定和总tensor数目不变的条件下，推测出-1所在的维度值
+例如： t = [ [1,2,3], [4,5,6] ]  
+	==> tf.reshape(t, shape=[-1])即为将t扁平化[1,2,3,4,5,6]==>得到-1对应的维度为6
+	==> tf.reshape(t, shape=[2,3,-1])即在t的数目保持不变的条件下将t变形为[2,3,len(t)/(2*3)]==>得到-1对应的维度为1
