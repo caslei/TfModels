@@ -46,7 +46,7 @@ def bilinear_upsample_weights(factor, number_of_classes):
     
     upsample_kernel = upsample_filt(filter_size)
     
-    for i in xrange(number_of_classes):        
+    for i in range(number_of_classes):        
         weights[:, :, i, i] = upsample_kernel
     
     return weights
@@ -57,8 +57,8 @@ os.environ["CUDA_VISIBLE_DEVICES"] = '1'
 sys.path.append("E:/TfModels/slim/")
 checkpoints_dir = 'C:/tmp/my_checkpoint'
 
-image_filename = 'C:/tmpsegmentation/data/cat.jpg'
-annotation_filename = 'C:/tmpsegmentation/data/cat_annotation.png'
+image_filename = 'C:/tmp/segmentation/data/cat.jpg'
+annotation_filename = 'C:/tmp/segmentation/data/cat_annotation.png'
 
 image_filename_placeholder = tf.placeholder(tf.string)
 annotation_filename_placeholder = tf.placeholder(tf.string)
@@ -85,7 +85,7 @@ background_labels_tensor = tf.not_equal(annotation_tensor, 1)
 bit_mask_class = tf.to_float(class_labels_tensor)
 bit_mask_background = tf.to_float(background_labels_tensor)
 
-combined_mask = tf.concat(concat_dim=2, 
+combined_mask = tf.concat(axis=2, 
                 values=[bit_mask_class, bit_mask_background])
 
 # Lets reshape our input so that it becomes suitable for 
@@ -140,7 +140,7 @@ with slim.arg_scope(vgg.vgg_arg_scope()):
 downsampled_logits_shape = tf.shape(logits)
 
 # Calculate the ouput size of the upsampled tensor
-upsampled_logits_shape = tf.pack([downsampled_logits_shape[0],
+upsampled_logits_shape = tf.stack([downsampled_logits_shape[0],
                                   downsampled_logits_shape[1] * upsample_factor,
                                   downsampled_logits_shape[2] * upsample_factor,
                                   downsampled_logits_shape[3] ])
