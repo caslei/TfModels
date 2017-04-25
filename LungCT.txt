@@ -30,5 +30,12 @@ http://www0.cs.ucl.ac.uk/opensource_mia_ws_2012/links.html
 
 #-------------------------------------------------------------
 
+UCF - Center for research in Computer Vision
+	University of central florida
 
+http://crcv.ucf.edu/courses/
+
+
+
+#-------------------------------------------------------------
 
