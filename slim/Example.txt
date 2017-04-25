@@ -482,3 +482,10 @@ $ python -c "import os; import inspect; import tensorflow; print(os.path.dirname
 
 # 非常实用的管道符与帮助信息
 #--------------------------------------------
+
+# 可视化TensorFlow的运算过程需要使用TensorBoard
+$ python -m tensorflow.tensorboard --logdir= C:/tmp/segmentation/log_folder
+#
+#--------------------------------------------
+
+
