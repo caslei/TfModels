@@ -1,3 +1,4 @@
+#http://lib.csdn.net/article/machinelearning/39582
 #https://github.com/warmspringwinds/tensorflow_notes/blob/master/image_segmentation_conditional_random_fields.ipynb
 
 from __future__ import division
@@ -40,8 +41,8 @@ def bilinear_upsample_weights(factor, number_of_classes):
     """
     filter_size = get_kernel_size(factor)
     
-    weights = np.zeros((filter_size, filter_size, number_of_classes,
-                        number_of_classes), dtype=np.float32)
+    weights = np.zeros((filter_size, filter_size, number_of_classes, number_of_classes),
+    				   dtype=np.float32)
     
     upsample_kernel = upsample_filt(filter_size)
     
