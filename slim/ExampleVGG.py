@@ -11,13 +11,11 @@ import urllib
 from nets import vgg
 from preprocessing import vgg_preprocessing
 from preprocessing.vgg_preprocessing import (_mean_image_subtraction, 
-                                        _R_MEAN, _G_MEAN, _B_MEAN)
+                                        _R_MEAN, _G_MEAN, _B_MEAN) #RGB
 
 
 def get_kernel_size(factor):
-    """
-    Find the kernel size given the desired factor of upsampling.
-    """
+    """Find the kernel size given the desired factor of upsampling."""
     return 2 * factor - factor % 2
 
 def upsample_filt(size):
@@ -32,6 +30,8 @@ def upsample_filt(size):
     og = np.ogrid[:size, :size]
     return (1 - abs(og[0] - center) / factor) * \
            (1 - abs(og[1] - center) / factor)
+
+    # np.ogrid[:5,:5] ==>[array([[0],[1],[2],[3],[4]]^T),array([[0],[1],[2],[3],[4]])]
 
 def bilinear_upsample_weights(factor, number_of_classes):
     """

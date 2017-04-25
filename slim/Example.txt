@@ -380,3 +380,75 @@ python中，一切数据均为对象，一切变量均是对数据的引用
 熟用Python内置的三个函数：help(), type(), dir()
 
 
+
+#--------------------------------------------
+函数名称： tf.Graph.as_default()
+返回值：返回一个上下文管理器，这个上下文管理器使用这个图作为默认的图
+
+说明：如果你想在一个进程里创建多个图，可能会用到这个方法。
+     为了方便，如果你没有显式创建一个图的话，系统提供了一个全局默认的图，
+     默认把所有的操作都添加到全局默 认图中。使用这个方法的话（配合with关键词使用），
+     可以只把with块里的操作添加到默认图中。默认图是当前线程的一个属性，
+     如果你创建了一个新的线程，想使用全局默认图，必须显式调用这个方法。
+
+示例：
+    g = tf.Graph()    # 新建了一个图，将该图显示作为默认图 
+    with g.as_default():
+        c = tf.constant(5.0)  
+        assert c.graph is g  
+
+函数名称：tf.Graph.device(device_name_or_function)
+返回值：返回一个上下文管理器，这个上下文管理器明确使用哪个设备
+参数  ：可以是一个设备名称的字符串或者一个函数
+
+示例:
+    # 所有在上下文里构建的操作，都会放到gpu:0这个设备上来运行 
+    with tf.Graph().device('/gpu:0'):  
+
+    # 所有在上下文里构建的操作，将不会放到任何设备上  
+    with tf.Graph().device(None):
+
+
+函数名称：tf.Graph.control_dependencies(control_inputs)
+返回值：返回一个上下文，这个上下文中明确了控制依赖
+参数  ：一个操作或者张量的集合，这个操作或者张量必须被执行或者计算先于定义在上下文中的操作
+说明  ：控制依赖可以被嵌套。
+       可以通过传递None来清空控制依赖
+       形成控制依赖的张量或者操作必须在返回的上下文里被定义
+
+示例：
+    1. 基础用法
+    with g.control_dependencies([a, b, c]):  
+        # `d` 和`e` 在 `a`, `b`, 和`c` 被执行之后运行  
+        d = ...  
+        e = ...  
+
+    2.依赖的嵌套
+    with g.control_dependencies([a, b]):  
+        # 此处构建的操作在 `a` 和 `b`都被执行后才执行.  
+            with g.control_dependencies([c, d]):  
+                # 此处构建的操作在`a`, `b`, `c`, 和 `d`都被执行后才执行 
+
+    3.清空控制依赖
+    with g.control_dependencies([a, b]):  
+        # 此处构建的操作在 `a` 和 `b`都被执行后才执行.  
+        with g.control_dependencies(None):  
+            # 此处构架的操作正常执行，不用等待a和b，因为依赖被清空.  
+            with g.control_dependencies([c, d]):  
+                # 此处构建的操作在 `c` 和 `d`执行之后执行，不用等待a和b
+
+    4.形成控制依赖的张量必须在上下文里被定义
+    # 错误  
+    def my_func(pred, tensor):  
+        t = tf.matmul(tensor, tensor)  
+        with tf.control_dependencies([pred]):  
+            # matmul操作在上下文外被创建，因此错误  
+        return t  
+      
+    # 正确 
+    def my_func(pred, tensor):  
+        with tf.control_dependencies([pred]):  
+        # matmul操作在上下文内被创建，因此正确  
+        return tf.matmul(tensor, tensor)  
+
+
