@@ -451,4 +451,27 @@ python中，一切数据均为对象，一切变量均是对数据的引用
         # matmul操作在上下文内被创建，因此正确  
         return tf.matmul(tensor, tensor)  
 
+#--------------------------------------------
+更多内容可参看网站: http://lib.csdn.net/article/machinelearning/39582
+
+
+
+#--------------------------------------------
+python assert断言的作用
+assert断言是其布尔值必须为真的判定，如果发生异常就说明为假。用来测试表示式，其返回值为假，就会触发异常。
+
+assert expression
+下面做一些assert用法的语句供参考：
+assert 1==1
+assert 2+2==2*2
+assert len(['my boy',12])<10
+assert range(4)==[0,1,2,3]
+
+如何为assert断言语句添加异常参数
+assert的异常参数，其实就是在断言表达式后添加字符串信息，解释断言并更好的知道是哪里出了问题。
+assert expression [, arguments]
+assert 表达式 [, 参数]
+assert len(lists) >=5,'列表元素个数小于5'
+assert 2==1,'2不等于1'
+
 
