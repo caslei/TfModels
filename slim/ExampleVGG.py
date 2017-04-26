@@ -253,12 +253,12 @@ with tf.Session() as sess:
     ax1.set_title('Input image')
     probability_graph = ax2.imshow(np.dstack((train_annotation,)*3)*100)
     ax2.set_title('Input Ground-Truth Annotation')
-    plt.ion()
-    plt.show()
-    fig.savefig('tmp1.png', dpi=fig.dpi)
+    #plt.ion()
+    #plt.show()
+    fig.savefig('tmp_start.png', dpi=fig.dpi)
     
     # Let's perform 10 interations
-    for i in range(10):        
+    for i in range(40):        
         loss, summary_string = sess.run(
          [cross_entropy_sum, merged_summary_op], feed_dict=feed_dict_to_use)
         
@@ -269,18 +269,17 @@ with tf.Session() as sess:
         
         summary_string_writer.add_summary(summary_string, i)
         
-        cmap = plt.get_cmap('bwr')
-        
-        fig, (ax1, ax2) = plt.subplots(1, 2, sharey=True)
-        ax1.imshow(np.uint8(pred_np.squeeze() != 1), vmax=1.5, vmin=-0.4, cmap=cmap)
-        ax1.set_title('Argmax. Iteration # ' + str(i))
-        probability_graph = ax2.imshow(probabilities_np.squeeze()[:, :, 0])
-        ax2.set_title('Probability of the Class. Iteration # ' + str(i))
-        
-        plt.colorbar(probability_graph)
-        plt.ion()
-        plt.show()
-        fig.savefig('tmp_'+ str(i+1) +".png", dpi=fig.dpi)
+        if i % 5 == 0:
+            cmap = plt.get_cmap('bwr')
+            fig, (ax1, ax2) = plt.subplots(1, 2, sharey=True)
+            ax1.imshow(np.uint8(pred_np.squeeze() != 1), vmax=1.5, vmin=-0.4, cmap=cmap)
+            ax1.set_title('Argmax. Iteration # ' + str(i))
+            probability_graph = ax2.imshow(probabilities_np.squeeze()[:, :, 0])
+            ax2.set_title('Probability of the Class. Iteration # ' + str(i))
+            plt.colorbar(probability_graph)
+        #plt.ion()
+        #plt.show()
+            fig.savefig('tmp_'+ str(i) +".png", dpi=fig.dpi)
         
         print("Current Loss: " +  str(loss))
     
@@ -290,14 +289,13 @@ with tf.Session() as sess:
     
     fig, (ax1, ax2) = plt.subplots(1, 2, sharey=True)    
     ax1.imshow(np.uint8(final_predictions.squeeze() != 1), vmax=1.5, vmin=-0.4, cmap=cmap)
-    ax1.set_title('Final Argmax')
-        
+    ax1.set_title('Final Argmax') 
     probability_graph = ax2.imshow(final_probabilities.squeeze()[:, :, 0])
     ax2.set_title('Final Probability of the Class')
     plt.colorbar(probability_graph)
-    plt.ion()
-    plt.show()
-    fig.savefig('tmp_10.png', dpi=fig.dpi)
+    #plt.ion()
+    #plt.show()
+    fig.savefig('tmp_final.png', dpi=fig.dpi)
     
     print("Final Loss: " +  str(final_loss))
     
