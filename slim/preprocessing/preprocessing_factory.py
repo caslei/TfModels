@@ -20,10 +20,22 @@ from __future__ import print_function
 
 import tensorflow as tf
 
+
+# --------------------------------------------------------
+# 将 preprocessing 文件夹下的 
+#             cifarnet_preprocessing.py
+#             inception_preprocessing.py
+#             lenet_preprocessing.py
+#             vgg_preprocessing.py
+# 文件加载到程序中
+# --------------------------------------------------------
 from preprocessing import cifarnet_preprocessing
 from preprocessing import inception_preprocessing
 from preprocessing import lenet_preprocessing
 from preprocessing import vgg_preprocessing
+
+
+
 
 slim = tf.contrib.slim
 
@@ -44,6 +56,7 @@ def get_preprocessing(name, is_training=False):
   Raises:
     ValueError: If Preprocessing `name` is not recognized.
   """
+  # 将 所有文件中对应的函数 概括到 dictionary中
   preprocessing_fn_map = {
       'cifarnet': cifarnet_preprocessing,
       'inception': inception_preprocessing,
@@ -65,6 +78,7 @@ def get_preprocessing(name, is_training=False):
       'vgg_19': vgg_preprocessing,
   }
 
+  # not in ==> 如果不存在于..中
   if name not in preprocessing_fn_map:
     raise ValueError('Preprocessing name [%s] was not recognized' % name)
 
