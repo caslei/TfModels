@@ -492,3 +492,17 @@ $ python -m tensorflow.tensorboard --logdir= C:/tmp/segmentation/log_folder
 例如： t = [ [1,2,3], [4,5,6] ]  
 	==> tf.reshape(t, shape=[-1])即为将t扁平化[1,2,3,4,5,6]==>得到-1对应的维度为6
 	==> tf.reshape(t, shape=[2,3,-1])即在t的数目保持不变的条件下将t变形为[2,3,len(t)/(2*3)]==>得到-1对应的维度为1
+
+
+
+
+
+
+
+
+
+
+
+在安装python工具包的时候，如果用pip install 不行的时候可以使用pip3 install试试
+例如：
+pip install scikit-image ===> pip3 install scikit-image	
