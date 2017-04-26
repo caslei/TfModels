@@ -38,6 +38,10 @@ from tensorflow.python.ops import control_flow_ops
 
 slim = tf.contrib.slim
 
+# 单下划线开头的变量表示该方法或变量为：私有属性
+# “from <模块/包名> import *”，以“_”开头的名称都不会被导入，
+# 除非模块或包中的“__all__”列表显式地包含了它们
+
 _R_MEAN = 123.68
 _G_MEAN = 116.78
 _B_MEAN = 103.94
@@ -66,28 +70,39 @@ def _crop(image, offset_height, offset_width, crop_height, crop_width):
     InvalidArgumentError: if the rank is not 3 or if the image dimensions are
       less than the crop size.
   """
-  original_shape = tf.shape(image)
+  original_shape = tf.shape(image) #获取图像的维度：[height, width, channels]
 
-  rank_assertion = tf.Assert(
-      tf.equal(tf.rank(image), 3),
-      ['Rank of image must be equal to 3.'])
-  cropped_shape = control_flow_ops.with_dependencies(
-      [rank_assertion],
-      tf.stack([crop_height, crop_width, original_shape[2]]))
+  #-----------------------------------------------------------------------------
+  # 断言图像rank的值为3，否则抛出异常信息（图像rank必须为3）， 
+  rank_assertion = tf.Assert(tf.equal(tf.rank(image), 3),
+                             ['Rank of image must be equal to 3.'])
+  # with_dependencies(dependencies, output_tensor, name=None) 
+  # 只有所有的dependencies操作运行以后，才运行with_dependencies()语句,并返回 output_tensor
+  cropped_shape = control_flow_ops.with_dependencies([rank_assertion],      
+          tf.stack([crop_height, crop_width, original_shape[2]])) #返回tf.stack的结果
 
-  size_assertion = tf.Assert(
-      tf.logical_and(
-          tf.greater_equal(original_shape[0], crop_height),
-          tf.greater_equal(original_shape[1], crop_width)),
-      ['Crop size greater than the image size.'])
 
+  # 断言original_shape >= crop_shape,否则返回异常"剪切图像超过原图像"
+  size_assertion = tf.Assert( tf.logical_and(     
+                    tf.greater_equal(original_shape[0], crop_height),
+                    tf.greater_equal(original_shape[1], crop_width)),
+                          ['Crop size greater than the image size.'] )
+  
+  # 将[offset_height, offset_width, 0]堆积为列向量，然后将其转为int32数据类型
   offsets = tf.to_int32(tf.stack([offset_height, offset_width, 0]))
 
   # Use tf.slice instead of crop_to_bounding box as it accepts tensors to
   # define the crop size.
-  image = control_flow_ops.with_dependencies(
-      [size_assertion],
-      tf.slice(image, offsets, cropped_shape))
+  # tf.slice(input_, begin, size, name=None):从tensor中提取一张size大小的slice,
+  image = control_flow_ops.with_dependencies([size_assertion],
+                          tf.slice(image, offsets, cropped_shape))
+  #-----------------------------------------------------------------------------
+  # tf.Assert()常与tf.control_dependencies()或control_flow_ops.with_dependencies()
+  # 一起使用，确保assert_op执行后，才会执行dependencies范围内的其他语句
+  #-----------------------------------------------------------------------------
+
+
+  # 在同一范围内，一旦遇到return语句，函数就直接结算，不在执行同范围内的return后的语句        
   return tf.reshape(image, cropped_shape)
 
 
@@ -114,38 +129,49 @@ def _random_crop(image_list, crop_height, crop_width):
       or the images are smaller than the crop dimensions.
   """
   if not image_list:
-    raise ValueError('Empty image_list.')
+    raise ValueError('Empty image_list.') # 如果image_list为False则抛出异常
 
   # Compute the rank assertions.
-  rank_assertions = []
+  rank_assertions = []  # 初始化为空列表
+
+  # 迭代判断image_list中每副图像的 rank => (height,width,channel)
   for i in range(len(image_list)):
-    image_rank = tf.rank(image_list[i])
-    rank_assert = tf.Assert(
-        tf.equal(image_rank, 3),
-        ['Wrong rank for tensor  %s [expected] [actual]',
-         image_list[i].name, 3, image_rank])
-    rank_assertions.append(rank_assert)
+    image_rank = tf.rank(image_list[i]) #计算图像的rank
+    #断言图像的rank==3，否则抛出异常
+    rank_assert = tf.Assert(tf.equal(image_rank, 3),        
+        ['Wrong rank for tensor  %s [expected] [actual]', image_list[i].name, 3, image_rank])
+    #-----------------------------------------------------------------------------
+    # 3和image_rank为何没有 %d 的格式化输出对应， 该语句是否有误 ？？？？？？？？？？？
+    #-----------------------------------------------------------------------------
 
-  image_shape = control_flow_ops.with_dependencies(
-      [rank_assertions[0]],
-      tf.shape(image_list[0]))
+    rank_assertions.append(rank_assert) # 统计总共有多少副图像存在rank不为3的情况
+
+  # rank_assertions[0]成功执行后，返回tf.shape(image_list[0])
+  image_shape = control_flow_ops.with_dependencies([rank_assertions[0]], tf.shape(image_list[0]))
+      
+      
   image_height = image_shape[0]
-  image_width = image_shape[1]
-  crop_size_assert = tf.Assert(
-      tf.logical_and(
-          tf.greater_equal(image_height, crop_height),
-          tf.greater_equal(image_width, crop_width)),
-      ['Crop size greater than the image size.'])
+  image_width  = image_shape[1]
 
-  asserts = [rank_assertions[0], crop_size_assert]
+  # 判断剪切尺寸是否同时不超过原图像对应的尺寸
+  crop_size_assert = tf.Assert(tf.logical_and(
+                  tf.greater_equal(image_height, crop_height),
+                  tf.greater_equal(image_width, crop_width)),
+                      ['Crop size greater than the image size.'])
 
-  for i in range(1, len(image_list)):
+  asserts = [rank_assertions[0], crop_size_assert] # 记录 (rank异常 + 剪切异常)
+  
+  #-----------------------------------------------------------------------------
+  # 为什么range 要从 1而不是 0 开始循环 ？？？？？？？？？
+  #-----------------------------------------------------------------------------
+  for i in range(1, len(image_list)): # [ 1, len(image_list) )
     image = image_list[i]
+
     asserts.append(rank_assertions[i])
-    shape = control_flow_ops.with_dependencies([rank_assertions[i]],
-                                               tf.shape(image))
+    shape = control_flow_ops.with_dependencies([rank_assertions[i]], tf.shape(image))
+    
     height = shape[0]
-    width = shape[1]
+    width  = shape[1]
 
     height_assert = tf.Assert(
         tf.equal(height, image_height),
