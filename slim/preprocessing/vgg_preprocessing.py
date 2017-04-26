@@ -36,6 +36,7 @@ import tensorflow as tf
 
 from tensorflow.python.ops import control_flow_ops
 
+#用slim简化 ./tensorflow/contrib/slim 文件路径 
 slim = tf.contrib.slim
 
 # 单下划线开头的变量表示该方法或变量为：私有属性
