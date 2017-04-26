@@ -20,6 +20,7 @@ from __future__ import print_function
 
 import tensorflow as tf
 
+#用slim简化 ./tensorflow/contrib/slim 文件路径 
 slim = tf.contrib.slim
 
 
@@ -37,8 +38,12 @@ def preprocess_image(image, output_height, output_width, is_training):
     A preprocessed image.
   """
   image = tf.to_float(image)
-  image = tf.image.resize_image_with_crop_or_pad(
-      image, output_width, output_height)
-  image = tf.subtract(image, 128.0)
-  image = tf.div(image, 128.0)
+
+  # resize_image_with_crop_or_pad(image, target_height, target_width)
+  # 通过中心剪切或者填充 0 的方式将图像大小调整到指定的大小
+  image = tf.image.resize_image_with_crop_or_pad(image, 
+                              output_width, output_height)
+
+  image = tf.subtract(image, 128.0) # 进行减法操作
+  image = tf.div(image, 128.0)      # 进行除法操作
   return image
