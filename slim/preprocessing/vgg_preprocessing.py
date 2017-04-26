@@ -137,6 +137,7 @@ def _random_crop(image_list, crop_height, crop_width):
   # 迭代判断image_list中每副图像的 rank => (height,width,channel)
   for i in range(len(image_list)):
     image_rank = tf.rank(image_list[i]) #计算图像的rank
+
     #断言图像的rank==3，否则抛出异常
     rank_assert = tf.Assert(tf.equal(image_rank, 3),        
         ['Wrong rank for tensor  %s [expected] [actual]', image_list[i].name, 3, image_rank])
@@ -155,8 +156,8 @@ def _random_crop(image_list, crop_height, crop_width):
 
   # 判断剪切尺寸是否同时不超过原图像对应的尺寸
   crop_size_assert = tf.Assert(tf.logical_and(
-                  tf.greater_equal(image_height, crop_height),
-                  tf.greater_equal(image_width, crop_width)),
+                        tf.greater_equal(image_height, crop_height),
+                        tf.greater_equal(image_width, crop_width)),
                       ['Crop size greater than the image size.'])
 
   asserts = [rank_assertions[0], crop_size_assert] # 记录 (rank异常 + 剪切异常)
@@ -167,20 +168,24 @@ def _random_crop(image_list, crop_height, crop_width):
   for i in range(1, len(image_list)): # [ 1, len(image_list) )
     image = image_list[i]
 
-    asserts.append(rank_assertions[i])
+    asserts.append(rank_assertions[i]) #在asserts后面附加rank_assertions[i]
     shape = control_flow_ops.with_dependencies([rank_assertions[i]], tf.shape(image))
     
     height = shape[0]
     width  = shape[1]
 
-    height_assert = tf.Assert(
-        tf.equal(height, image_height),
-        ['Wrong height for tensor %s [expected][actual]',
-         image.name, height, image_height])
-    width_assert = tf.Assert(
-        tf.equal(width, image_width),
-        ['Wrong width for tensor %s [expected][actual]',
-         image.name, width, image_width])
+    height_assert = tf.Assert(tf.equal(height, image_height),
+      ['Wrong height for tensor %s [expected][actual]',image.name, height, image_height])
+    #-----------------------------------------------------------------------------
+    # 为什么range 要从 1而不是 0 开始循环 ？？？？？？？？？
+    #-----------------------------------------------------------------------------
+
+    width_assert = tf.Assert(tf.equal(width, image_width),
+        ['Wrong width for tensor %s [expected][actual]',image.name, width, image_width])
+
+    # list中的append 是将新元素整体添加，extend是将新元素中的每个子对象添加进来
+    # [1,2].append([3,4])==>[1,2,[3,4]], [1,2].extend([3,4])==>[1,2,3,4]
+    # append adds an element to a list, extend concatenates the first list with another list 
     asserts.extend([height_assert, width_assert])
 
   # Create a random bounding box.
@@ -189,16 +194,23 @@ def _random_crop(image_list, crop_height, crop_width):
   # generate random numbers at graph eval time, unlike the latter which
   # generates random numbers at graph definition time.
   max_offset_height = control_flow_ops.with_dependencies(
-      asserts, tf.reshape(image_height - crop_height + 1, []))
+          asserts, tf.reshape(image_height - crop_height + 1, [])) # 返回标量值
   max_offset_width = control_flow_ops.with_dependencies(
-      asserts, tf.reshape(image_width - crop_width + 1, []))
-  offset_height = tf.random_uniform(
-      [], maxval=max_offset_height, dtype=tf.int32)
-  offset_width = tf.random_uniform(
-      [], maxval=max_offset_width, dtype=tf.int32)
+          asserts, tf.reshape(image_width - crop_width + 1, []))   # 返回标量值
+  #-----------------------------------------------------------------------------
+  # 标量scalar 作为tensor时，其维度为:[]
+  #-----------------------------------------------------------------------------
 
-  return [_crop(image, offset_height, offset_width,
-                crop_height, crop_width) for image in image_list]
+  # tf.random_uniform(shape, minval=0, maxval=None, dtype=tf.float32, seed=None, name=None)：
+  # 在[minval, maxval)间产生一个均匀分布的随机值，
+  # For floats, the default range is [0, 1). For ints, maxval must be specified explicitly.
+  offset_height = tf.random_uniform([], maxval=max_offset_height, dtype=tf.int32)
+  offset_width  = tf.random_uniform([], maxval=max_offset_width, dtype=tf.int32)
+
+  # 一边循环一边计算的机制，称为生成器（Generator），必须放在[]或者()中
+  # 调用单个图像的_crop()方法，通过循环实现大批量图像的切割
+  return [_crop(image, offset_height, offset_width, crop_height, crop_width) for image in image_list]
+
 
 
 def _central_crop(image_list, crop_height, crop_width):
@@ -214,15 +226,14 @@ def _central_crop(image_list, crop_height, crop_width):
     the list of cropped images.
   """
   outputs = []
-  for image in image_list:
+  for image in image_list:  # image_list的维度: [ [height,width],[height,width],....]
     image_height = tf.shape(image)[0]
     image_width = tf.shape(image)[1]
 
     offset_height = (image_height - crop_height) / 2
-    offset_width = (image_width - crop_width) / 2
+    offset_width  = (image_width - crop_width) / 2
 
-    outputs.append(_crop(image, offset_height, offset_width,
-                         crop_height, crop_width))
+    outputs.append(_crop(image, offset_height, offset_width, crop_height, crop_width))
   return outputs
 
 
@@ -247,15 +258,25 @@ def _mean_image_subtraction(image, means):
       than three or if the number of channels in `image` doesn't match the
       number of values in `means`.
   """
+
+  # Tensor.get_shape().ndims 返回tensor的 rank, 等价于 tf.rank(tensor) 但后者需sess.run() 求解值.
   if image.get_shape().ndims != 3:
     raise ValueError('Input must be of size [height, width, C>0]')
-  num_channels = image.get_shape().as_list()[-1]
+
+  num_channels = image.get_shape().as_list()[-1] # 将shape以list的形式返回
+  
   if len(means) != num_channels:
     raise ValueError('len(means) must match the number of channels')
 
+  # tf.split(value, num_or_size_splits, axis=0, num=None, name='split')
+  # 沿指定axis方向,将张量value切割为num_or_size_splits个子张量
   channels = tf.split(axis=2, num_or_size_splits=num_channels, value=image)
+
   for i in range(num_channels):
-    channels[i] -= means[i]
+    channels[i] -= means[i] #  channels[i] = channels[i] - means[i] 
+
+  # 沿axis的方向将value链接起来 
+  #每个channel上的图像张量为[height,width],最后得到[height,width,channels]
   return tf.concat(axis=2, values=channels)
 
 
@@ -275,17 +296,23 @@ def _smallest_size_at_least(height, width, smallest_side):
     new_height: an int32 scalar tensor indicating the new height.
     new_width: and int32 scalar tensor indicating the new width.
   """
-  smallest_side = tf.convert_to_tensor(smallest_side, dtype=tf.int32)
+  #标量转化为张量
+  smallest_side = tf.convert_to_tensor(smallest_side, dtype=tf.int32) 
 
-  height = tf.to_float(height)
+  height = tf.to_float(height) #标量转化为float张量
   width = tf.to_float(width)
+
   smallest_side = tf.to_float(smallest_side)
 
-  scale = tf.cond(tf.greater(height, width),
-                  lambda: smallest_side / width,
-                  lambda: smallest_side / height)
+  # tf.cond(pred, fn1, fn2, name=None)： 
+  # Return either 'fn1()' or 'fn2()' based on the boolean predicate 'pred'.
+  # 类似于c++中的条件表达式 bool ? exp1 : exp2;
+  scale = tf.cond(tf.greater(height, width), lambda: smallest_side / width,
+                                             lambda: smallest_side / height)
+
   new_height = tf.to_int32(height * scale)
-  new_width = tf.to_int32(width * scale)
+  new_width  = tf.to_int32(width * scale)
+
   return new_height, new_width
 
 
@@ -305,12 +332,27 @@ def _aspect_preserving_resize(image, smallest_side):
   shape = tf.shape(image)
   height = shape[0]
   width = shape[1]
+  
+  # 调用 _smallest_size_at_least()对图像进行 resize
   new_height, new_width = _smallest_size_at_least(height, width, smallest_side)
-  image = tf.expand_dims(image, 0)
+
+  #expand_dims(input, axis=None, name=None, dim=None): 在指定axis上插入维度 “ 1 ” 
+  # tf.expand_dims(image, 0) from [height, width, channels] to [1,height, width, channels]
+  image = tf.expand_dims(image, 0) 
+
+  # tf.image.resize_bilinear(images, size, align_corners=None, name=None)
+  # 利用 bilinear插值，将 images大小调整为 size
   resized_image = tf.image.resize_bilinear(image, [new_height, new_width],
                                            align_corners=False)
+
+  # tf.squeeze(input, axis=None, name=None, squeeze_dims=None)
+  # 在squeeze_dims维度上，将张量中维度值为 1 的维度去掉 [1,2,1，3]--> [2,3]
   resized_image = tf.squeeze(resized_image)
+  
+  # The None element of the shape corresponds to a variable-sized dimension
+  # None 表示shape的具体大小是可变的，只能根据具体情况确定
   resized_image.set_shape([None, None, 3])
+
   return resized_image
 
 
@@ -336,14 +378,25 @@ def preprocess_for_train(image,
   Returns:
     A preprocessed image.
   """
-  resize_side = tf.random_uniform(
-      [], minval=resize_side_min, maxval=resize_side_max+1, dtype=tf.int32)
 
+  # 在[minval, maxval)之间参数一个维度为[]的随机数，==> 标量
+  resize_side = tf.random_uniform([], minval=resize_side_min, 
+                                      maxval=resize_side_max+1, dtype=tf.int32)
+
+  # 根据上文的定义，一旦确定选定的计算维度，就以该维度上的比例调整图像大小
   image = _aspect_preserving_resize(image, resize_side)
+
+  # 根据上文， 高度在 [0,image_height-output_height)，间随机取值
+  #           宽带在 [0,image_width-output_width)，间随机取值
   image = _random_crop([image], output_height, output_width)[0]
+
   image.set_shape([output_height, output_width, 3])
   image = tf.to_float(image)
-  image = tf.image.random_flip_left_right(image)
+
+  # tf.image.random_flip_left_right(image, seed=None)
+  # Randomly flip an image horizontally (left to right)
+  image = tf.image.random_flip_left_right(image)   # 随机水平翻转图像
+
   return _mean_image_subtraction(image, [_R_MEAN, _G_MEAN, _B_MEAN])
 
 
@@ -360,9 +413,14 @@ def preprocess_for_eval(image, output_height, output_width, resize_side):
     A preprocessed image.
   """
   image = _aspect_preserving_resize(image, resize_side)
+
+  # 根据上文定义，_central_crop()的第一个参数应该是一个list： image_list
+  # 返回的是另一个image_list，所有通过[0]将图像取出来
   image = _central_crop([image], output_height, output_width)[0]
+
   image.set_shape([output_height, output_width, 3])
   image = tf.to_float(image)
+  
   return _mean_image_subtraction(image, [_R_MEAN, _G_MEAN, _B_MEAN])
 
 
