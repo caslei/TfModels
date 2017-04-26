@@ -208,18 +208,21 @@ def preprocess_for_train(image, height, width, bbox,
       image = tf.image.convert_image_dtype(image, dtype=tf.float32)
 
     # Each bounding box shape [1, num_boxes, box_coords=[ymin,xmin,ymax,xmax] ]
-    image_with_box = tf.image.draw_bounding_boxes(tf.expand_dims(image, 0),
-                                                  bbox)
+    # 扩展图像维度，使其等于 bbox 的维度，然后以 bbox 的大小提取 对应图像区域
+    image_with_box = tf.image.draw_bounding_boxes(tf.expand_dims(image, 0), bbox)
+
     tf.summary.image('image_with_bounding_boxes', image_with_box)
 
     distorted_image, distorted_bbox = distorted_bounding_box_crop(image, bbox)
+
     # Restore the shape since the dynamic slice based upon the bbox_size loses
     # the third dimension.
     distorted_image.set_shape([None, None, 3])
+    
     image_with_distorted_box = tf.image.draw_bounding_boxes(
-        tf.expand_dims(image, 0), distorted_bbox)
-    tf.summary.image('images_with_distorted_bounding_box',
-                     image_with_distorted_box)
+                                      tf.expand_dims(image, 0), distorted_bbox)
+
+    tf.summary.image('images_with_distorted_bounding_box', image_with_distorted_box)
 
     # This resizing operation may distort the images because the aspect
     # ratio is not respected. We select a resize method in a round robin
@@ -227,6 +230,7 @@ def preprocess_for_train(image, height, width, bbox,
     # Note that ResizeMethod contains 4 enumerated resizing methods.
 
     # We select only 1 case for fast_mode bilinear.
+    # if...else...放在同一行的情况下就没有 tab 间距的问题了
     num_resize_cases = 1 if fast_mode else 4
     distorted_image = apply_with_random_selector(
         distorted_image,
