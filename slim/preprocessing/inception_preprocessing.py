@@ -20,6 +20,7 @@ from __future__ import print_function
 
 import tensorflow as tf
 
+# 加载 ./tensorflow/python/ops/control_flow_ops.py 文件内的所有可用方法和属性
 from tensorflow.python.ops import control_flow_ops
 
 
@@ -35,11 +36,14 @@ def apply_with_random_selector(x, func, num_cases):
     The result of func(x, sel), where func receives the value of the
     selector as a python integer, but sel is sampled dynamically.
   """
+  # 在[0, maxval)之间随机挑选一个标量（维度[]）
   sel = tf.random_uniform([], maxval=num_cases, dtype=tf.int32)
+  
   # Pass the real x only to one of the func calls.
-  return control_flow_ops.merge([
-      func(control_flow_ops.switch(x, tf.equal(sel, case))[1], case)
-      for case in range(num_cases)])[0]
+  # 在一个tensor list中，找到可用获取的一个tensor和它对应的index，并以元组 tuple 的方式返回
+  # 所以通过 [0] 调取元组的第一个元素，即 tensor
+  return control_flow_ops.merge(
+    [func(control_flow_ops.switch(x, tf.equal(sel, case))[1], case) for case in range(num_cases)])[0]
 
 
 def distort_color(image, color_ordering=0, fast_mode=True, scope=None):
@@ -60,9 +64,17 @@ def distort_color(image, color_ordering=0, fast_mode=True, scope=None):
   Raises:
     ValueError: if color_ordering not in [0, 3]
   """
+
+  # tf.name_scope(*args, **kwds)
+  # Returns a context manager that creates hierarchical names for operations.
+  # 指定tensor运算的所处的操作范围 scope,
   with tf.name_scope(scope, 'distort_color', [image]):
     if fast_mode:
       if color_ordering == 0:
+        # random_brightness(image, max_delta, seed=None)
+        # 根据随机因子，调整图像亮度
+        # 等价于 adjust_brightness(image,delta),其中`delta`在 [-max_delta, max_delta)
+        # 之间随机选取
         image = tf.image.random_brightness(image, max_delta=32. / 255.)
         image = tf.image.random_saturation(image, lower=0.5, upper=1.5)
       else:
@@ -93,16 +105,16 @@ def distort_color(image, color_ordering=0, fast_mode=True, scope=None):
         raise ValueError('color_ordering must be in [0, 3]')
 
     # The random_* ops do not necessarily clamp.
+    # clip_by_value(tensor, clip_value_min, clip_value_max, name=None)
+    # 在 [min,max]间，剪切张量 tensor 元素值，小于 min 的元素值设为 min
+    # 大于 max 的元素值设为 max
     return tf.clip_by_value(image, 0.0, 1.0)
 
 
-def distorted_bounding_box_crop(image,
-                                bbox,
-                                min_object_covered=0.1,
+def distorted_bounding_box_crop(image, bbox, min_object_covered=0.1,
                                 aspect_ratio_range=(0.75, 1.33),
                                 area_range=(0.05, 1.0),
-                                max_attempts=100,
-                                scope=None):
+                                max_attempts=100, scope=None):
   """Generates cropped_image using a one of the bboxes randomly distorted.
 
   See `tf.image.sample_distorted_bounding_box` for more documentation.
@@ -138,17 +150,22 @@ def distorted_bounding_box_crop(image,
     # allowed range of aspect ratios, sizes and overlap with the human-annotated
     # bounding box. If no box is supplied, then we assume the bounding box is
     # the entire image.
+
+    # 产生一个随机扰动的边框 返回 begin, size and bboxes 三个张量
     sample_distorted_bounding_box = tf.image.sample_distorted_bounding_box(
-        tf.shape(image),
-        bounding_boxes=bbox,
-        min_object_covered=min_object_covered,
-        aspect_ratio_range=aspect_ratio_range,
-        area_range=area_range,
-        max_attempts=max_attempts,
-        use_image_if_no_bounding_boxes=True)
+                                      tf.shape(image),
+                                      bounding_boxes=bbox,
+                                      min_object_covered=min_object_covered,
+                                      aspect_ratio_range=aspect_ratio_range,
+                                      area_range=area_range,
+                                      max_attempts=max_attempts,
+                                      use_image_if_no_bounding_boxes=True)
+
     bbox_begin, bbox_size, distort_bbox = sample_distorted_bounding_box
 
     # Crop the image to the specified bounding box.
+    # tf.slice(input_, begin, size, name=None):在 begin 处，
+    # 从tensor中调取一张size大小的slice,
     cropped_image = tf.slice(image, bbox_begin, bbox_size)
     return cropped_image, distort_bbox
 
