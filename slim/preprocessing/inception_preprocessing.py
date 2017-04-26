@@ -171,8 +171,7 @@ def distorted_bounding_box_crop(image, bbox, min_object_covered=0.1,
 
 
 def preprocess_for_train(image, height, width, bbox,
-                         fast_mode=True,
-                         scope=None):
+                                 fast_mode=True, scope=None):
   """Distort one image for training a network.
 
   Distorting images provides a useful technique for augmenting the data
@@ -200,13 +199,15 @@ def preprocess_for_train(image, height, width, bbox,
   """
   with tf.name_scope(scope, 'distort_image', [image, height, width, bbox]):
     if bbox is None:
-      bbox = tf.constant([0.0, 0.0, 1.0, 1.0],
-                         dtype=tf.float32,
-                         shape=[1, 1, 4])
+      # shape [ 1, num_boxes, coords=[ymin, xmin, ymax, xmax] ]
+      bbox = tf.constant([0.0, 0.0, 1.0, 1.0], dtype=tf.float32, 
+                                               shape=[1, 1, 4])
+
     if image.dtype != tf.float32:
+      # 转换到指定的图像数据类型
       image = tf.image.convert_image_dtype(image, dtype=tf.float32)
-    # Each bounding box has shape [1, num_boxes, box coords] and
-    # the coordinates are ordered [ymin, xmin, ymax, xmax].
+
+    # Each bounding box shape [1, num_boxes, box_coords=[ymin,xmin,ymax,xmax] ]
     image_with_box = tf.image.draw_bounding_boxes(tf.expand_dims(image, 0),
                                                   bbox)
     tf.summary.image('image_with_bounding_boxes', image_with_box)
