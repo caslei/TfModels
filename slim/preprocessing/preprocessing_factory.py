@@ -82,7 +82,12 @@ def get_preprocessing(name, is_training=False):
   if name not in preprocessing_fn_map:
     raise ValueError('Preprocessing name [%s] was not recognized' % name)
 
+  # **kwargs 表示字典类型的不定长参数，kwargs={kw1:val1,kw2:val2,...}
   def preprocessing_fn(image, output_height, output_width, **kwargs):
+
+    # 因为加载进来的 .py 文件中均有 presprocess_image()函数，所以可以直接使用该函数
+    # preprocessing_fn_map[name] 即调取字典(keyword:value)中 keyword 对应的 value
+    # preprocessing_fn_map[vgg].preprocess_image() --> vgg_preprocessing.preprocess_image()
     return preprocessing_fn_map[name].preprocess_image(
         image, output_height, output_width, is_training=is_training, **kwargs)
 
