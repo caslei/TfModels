@@ -32,7 +32,8 @@ def upsample_filt(size):
     return (1 - abs(og[0] - center) / factor) * \
            (1 - abs(og[1] - center) / factor)
 
-    # np.ogrid[:5,:5] ==>[array([[0],[1],[2],[3],[4]]^T),array([[0],[1],[2],[3],[4]])]
+    # np.ogrid[:5,:5] ==>[array([[0],[1],[2],[3],[4]]^T),
+    #                     array([[0],[1],[2],[3],[4]]  )]
 
 def bilinear_upsample_weights(factor, number_of_classes):
     """
@@ -101,63 +102,62 @@ flat_labels = tf.reshape(tensor=combined_mask, shape=(-1, 2))
 #from nets import vgg
 #from preprocessing import vgg_preprocessing
 fig_size = [15, 4]
-plt.rcParams["figure.figsize"] = fig_size
-
+plt.rcParams["figure.figsize"] = fig_size #set figure size
 
 slim = tf.contrib.slim
 
 # Load the mean pixel values and the function
 # that performs the subtraction from each pixel
-#from preprocessing.vgg_preprocessing import (_mean_image_subtraction, 
-#                                    _R_MEAN, _G_MEAN, _B_MEAN)
+#from preprocessing.vgg_preprocessing import \
+# ( _mean_image_subtraction, _R_MEAN, _G_MEAN, _B_MEAN)
 
 upsample_factor = 32
 number_of_classes = 2
-log_folder = 'c:/tmp/segmentation/log_folder'
+log_folder = "c:/tmp/segmentation/log_folder"
 
 vgg_checkpoint_path = os.path.join(checkpoints_dir, 'vgg_16.ckpt')
 
-# Convert image to float32 before subtracting the
-# mean pixel value
+# Convert image to float32 before subtracting the mean pixel value
 image_float = tf.to_float(image_tensor, name='ToFloat')
 
 # Subtract the mean pixel value from each pixel
-mean_centered_image = _mean_image_subtraction(image_float,
-                                          [_R_MEAN, _G_MEAN, _B_MEAN])
+mean_centered_image = _mean_image_subtraction(
+             image_float, [_R_MEAN, _G_MEAN, _B_MEAN])
 
 processed_images = tf.expand_dims(mean_centered_image, 0)
 
-upsample_filter_np = bilinear_upsample_weights(upsample_factor,
-                                               number_of_classes)
+upsample_filter_np = bilinear_upsample_weights(
+                      upsample_factor, number_of_classes)
 
 upsample_filter_tensor = tf.constant(upsample_filter_np)
 
-# Define the model that we want to use -- specify to use only two classes at the last layer
-with slim.arg_scope(vgg.vgg_arg_scope()):
-    
+# Define the model that we want, and specify two classes at the last layer
+with slim.arg_scope(vgg.vgg_arg_scope()):    
     logits, end_points = vgg.vgg_16(processed_images, num_classes=2,
                            is_training=is_training_placeholder,
                            spatial_squeeze=False, fc_conv_padding='SAME')
 
 downsampled_logits_shape = tf.shape(logits)
 
-# Calculate the ouput size of the upsampled tensor
+# Calculate the ouput size of the upsampled tensor 
+# 沿指定维度堆积张量 tf.stack([tensor1,tensor2,tensor3], axis=0)
 upsampled_logits_shape = tf.stack([downsampled_logits_shape[0],
-                                  downsampled_logits_shape[1] * upsample_factor,
-                                  downsampled_logits_shape[2] * upsample_factor,
-                                  downsampled_logits_shape[3] ])
+                            downsampled_logits_shape[1] * upsample_factor,
+                            downsampled_logits_shape[2] * upsample_factor,
+                            downsampled_logits_shape[3] ])
 
-# Perform the upsampling
+# Perform the upsampling # 对 conv2d进行矩阵转置处理
 upsampled_logits = tf.nn.conv2d_transpose(logits, upsample_filter_tensor,
-                                 output_shape=upsampled_logits_shape,
-                                 strides=[1, upsample_factor, upsample_factor, 1])
+                            output_shape=upsampled_logits_shape,
+                            strides=[1, upsample_factor, upsample_factor, 1])
 
 # Flatten the predictions, so that we can compute cross-entropy for
 # each pixel and get a sum of cross-entropies.
-flat_logits = tf.reshape(tensor=upsampled_logits, shape=(-1, number_of_classes))
+flat_logits = tf.reshape(tensor=upsampled_logits, 
+                         shape=(-1, number_of_classes)) #-1可推测出来
 
-cross_entropies = tf.nn.softmax_cross_entropy_with_logits(logits=flat_logits,
-                                                          labels=flat_labels)
+cross_entropies = tf.nn.softmax_cross_entropy_with_logits(
+                        logits=flat_logits, labels=flat_labels)
 
 cross_entropy_sum = tf.reduce_sum(cross_entropies)
 
@@ -176,10 +176,9 @@ probabilities = tf.nn.softmax(upsampled_logits)
 # related to variables of the vgg model.
 
 # We also retrieve gradient Tensors for each of our variables
-# This way we can later visualize them in tensorboard.
-# optimizer.compute_gradients and optimizer.apply_gradients
-# is equivalent to running:
-# train_step = tf.train.AdamOptimizer(learning_rate=0.0001).minimize(cross_entropy_sum)
+# optimizer.compute_gradients and optimizer.apply_gradients is equivalent 
+# to running: train_step = tf.train.AdamOptimizer(
+#                   learning_rate=0.0001).minimize(cross_entropy_sum)
 with tf.variable_scope("adam_vars"):
     optimizer = tf.train.AdamOptimizer(learning_rate=0.0001)
     gradients = optimizer.compute_gradients(loss=cross_entropy_sum)
@@ -212,25 +211,24 @@ vgg_fc8_weights = slim.get_variables_to_restore(include=['vgg_16/fc8'])
 
 adam_optimizer_variables = slim.get_variables_to_restore(include=['adam_vars'])
 
-# Add summary op for the loss -- to be able to see it in
-# tensorboard.
+#-----------------------------------------------------------------
+# Add summary op for the loss - to see it in tensorboard.
 tf.summary.scalar('cross_entropy_loss', cross_entropy_sum)
 
-# Put all summary ops into one op. Produces string when
-# you run it.
+# Put all summary ops into one op. Produces string when you run it.
 merged_summary_op = tf.summary.merge_all()
 
-# Create the summary writer -- to write all the logs
-# into a specified file. This file can be later read
-# by tensorboard.
+# Create the summary writer to write all the logs into a specified file. 
+# This file can be later read by tensorboard.
 summary_string_writer = tf.summary.FileWriter(log_folder)
+#-----------------------------------------------------------------
 
 # Create the log folder if doesn't exist yet
 if not os.path.exists(log_folder):
     os.makedirs(log_folder)
 
-# Create an OP that performs the initialization of
-# values of variables to the values from VGG.
+# Create an OP that performs the initialization of values of variables
+# to the values from VGG. #将VGG模型中的参数值赋值给本例中的变量
 read_vgg_weights_except_fc8_func = slim.assign_from_checkpoint_fn(
                                    vgg_checkpoint_path,
                                    vgg_except_fc8_weights)
@@ -239,40 +237,41 @@ read_vgg_weights_except_fc8_func = slim.assign_from_checkpoint_fn(
 vgg_fc8_weights_initializer = tf.variables_initializer(vgg_fc8_weights)
 
 # Initializer for adam variables
-optimization_variables_initializer = tf.variables_initializer(adam_optimizer_variables)
+optimization_variables_initializer = tf.variables_initializer(
+                                            adam_optimizer_variables)
 
 with tf.Session() as sess:    
-    # Run the initializers.
-    read_vgg_weights_except_fc8_func(sess)
+    read_vgg_weights_except_fc8_func(sess)  # Run the initializers.
     sess.run(vgg_fc8_weights_initializer)
     sess.run(optimization_variables_initializer)
     
-    train_image, train_annotation = sess.run([image_tensor, annotation_tensor],
-                                              feed_dict=feed_dict_to_use)
+    train_image, train_annotation = sess.run(
+          [image_tensor, annotation_tensor], feed_dict=feed_dict_to_use)
     
-    f, (ax1, ax2) = plt.subplots(1, 2, sharey=True)
+    fig, (ax1, ax2) = plt.subplots(1, 2, sharey=True)
     ax1.imshow(train_image)
     ax1.set_title('Input image')
     probability_graph = ax2.imshow(np.dstack((train_annotation,)*3)*100)
     ax2.set_title('Input Ground-Truth Annotation')
     plt.ion()
     plt.show()
+    fig.savefig('tmp1.png', dpi=fig.dpi)
     
     # Let's perform 10 interations
     for i in range(10):        
-        loss, summary_string = sess.run([cross_entropy_sum, merged_summary_op],
-                                        feed_dict=feed_dict_to_use)
+        loss, summary_string = sess.run(
+         [cross_entropy_sum, merged_summary_op], feed_dict=feed_dict_to_use)
         
         sess.run(train_step, feed_dict=feed_dict_to_use)
         
-        pred_np, probabilities_np = sess.run([pred, probabilities],
-                                              feed_dict=feed_dict_to_use)
+        pred_np, probabilities_np = sess.run(
+         [pred, probabilities], feed_dict=feed_dict_to_use)
         
         summary_string_writer.add_summary(summary_string, i)
         
         cmap = plt.get_cmap('bwr')
         
-        f, (ax1, ax2) = plt.subplots(1, 2, sharey=True)
+        fig, (ax1, ax2) = plt.subplots(1, 2, sharey=True)
         ax1.imshow(np.uint8(pred_np.squeeze() != 1), vmax=1.5, vmin=-0.4, cmap=cmap)
         ax1.set_title('Argmax. Iteration # ' + str(i))
         probability_graph = ax2.imshow(probabilities_np.squeeze()[:, :, 0])
@@ -281,16 +280,15 @@ with tf.Session() as sess:
         plt.colorbar(probability_graph)
         plt.ion()
         plt.show()
+        fig.savefig('tmp_'+ str(i+1) +".png", dpi=fig.dpi)
         
         print("Current Loss: " +  str(loss))
     
     feed_dict_to_use[is_training_placeholder] = False    
-    final_predictions, final_probabilities, final_loss = sess.run([pred,
-                                                    probabilities, cross_entropy_sum],
-                                                    feed_dict=feed_dict_to_use)
+    final_predictions, final_probabilities, final_loss = sess.run(
+        [pred, probabilities, cross_entropy_sum], feed_dict=feed_dict_to_use)
     
-    f, (ax1, ax2) = plt.subplots(1, 2, sharey=True)
-    
+    fig, (ax1, ax2) = plt.subplots(1, 2, sharey=True)    
     ax1.imshow(np.uint8(final_predictions.squeeze() != 1), vmax=1.5, vmin=-0.4, cmap=cmap)
     ax1.set_title('Final Argmax')
         
@@ -299,6 +297,7 @@ with tf.Session() as sess:
     plt.colorbar(probability_graph)
     plt.ion()
     plt.show()
+    fig.savefig('tmp_10.png', dpi=fig.dpi)
     
     print("Final Loss: " +  str(final_loss))
     
