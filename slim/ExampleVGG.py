@@ -160,7 +160,8 @@ vgg_checkpoint_path = os.path.join(checkpoints_dir, 'vgg_16.ckpt')
 with slim.arg_scope(vgg.vgg_arg_scope()):  
     # 在 vgg_arg_scope范围内，调用 vgg_16 函数
     # 如果 num_classes = 3的话，整个图像是否会分成 [background, object1,object2] 呢？  
-    # 
+    # vgg_16(inputs, num_classes=1000, is_training=True, dropout_keep_prob=0.5,
+    #              spatial_squeeze=True, scope='vgg_16', fc_conv_padding='VALID'):
     # 
     logits, end_points = vgg.vgg_16(processed_images, num_classes=2,
                                     is_training=is_training_placeholder,
@@ -216,7 +217,7 @@ with tf.variable_scope("adam_vars"):
         current_variable = grad_var_pair[1]
         current_gradient = grad_var_pair[0]
         
-        # Relace some characters from the original variable name
+        # Replace some characters from the original variable name
         # tensorboard doesn't accept ':' symbol
         gradient_name_to_save = current_variable.name.replace(":", "_")
         
@@ -226,11 +227,13 @@ with tf.variable_scope("adam_vars"):
     
     train_step = optimizer.apply_gradients(grads_and_vars=gradients)
     
+#-----------------------------------------------------------------------------------------
 # Now we define a function that will load the weights from VGG checkpoint
 # into our variables when we call it. We exclude the weights from the last layer
 # which is responsible for class predictions. We do this because 
 # we will have different number of classes to predict and we can't
 # use the old ones as an initialization.
+# 从 vgg checkpoint 文件中载入已经训练好的模型参数，模型参数不包括 vgg_16/fc8 对应的参数
 vgg_except_fc8_weights = slim.get_variables_to_restore(exclude=['vgg_16/fc8', 'adam_vars'])
 
 # Here we get variables that belong to the last layer of network.
@@ -239,6 +242,8 @@ vgg_except_fc8_weights = slim.get_variables_to_restore(exclude=['vgg_16/fc8', 'a
 vgg_fc8_weights = slim.get_variables_to_restore(include=['vgg_16/fc8'])
 
 adam_optimizer_variables = slim.get_variables_to_restore(include=['adam_vars'])
+#-----------------------------------------------------------------------------------------
+
 
 #-----------------------------------------------------------------
 # Add summary op for the loss - to see it in tensorboard.
