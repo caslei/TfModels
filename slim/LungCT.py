@@ -30,7 +30,7 @@ inputImg =sitk.ReadImage(ImgFile)
 ImgPath = "E:\\Luna16\\subset0"
 
 Img4D = []
-for fileName in os.listdir(ImgPath):
+for fileName in os.listdir(ImgPath)[0:10]:  # get the first 10 images
     if fileName.endswith(".mhd"):
         Img3D =sitk.ReadImage(os.path.join(ImgPath, fileName))
         Img4D.append(Img3D)
