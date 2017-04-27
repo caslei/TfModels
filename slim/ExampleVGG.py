@@ -78,12 +78,12 @@ is_training_placeholder = tf.placeholder(tf.bool)
 feed_dict_to_use = {image_placeholder: image,
                     annotation_placeholder: annotation,
                     is_training_placeholder: True}
-                    
+
 #---------------------------------------------------------------
 # 思考多幅图像 3D CT 图像的时候该如何操作？？？？？？？？？？？？？？
 #---------------------------------------------------------------
 
-
+# 读取图像
 image_tensor = tf.read_file(image_placeholder)
 annotation_tensor = tf.read_file(annotation_placeholder)
 
@@ -102,6 +102,7 @@ bit_mask_class = tf.to_float(class_labels_tensor)
 bit_mask_background = tf.to_float(background_labels_tensor)
 
 #Concatenates tensors along one dimension (0:row,1:column,2:page)
+# 沿着指定的 axis 将 values 中的 tensor 链接起来
 combined_mask = tf.concat(axis=2,
                 values=[bit_mask_class, bit_mask_background])
 
@@ -112,11 +113,10 @@ flat_labels = tf.reshape(tensor=combined_mask, shape=(-1, 2))
 
 #---------------------------------------------------------------
 
-#import urllib2
-#from nets import vgg
-#from preprocessing import vgg_preprocessing
+
 fig_size = [15, 4]
 plt.rcParams["figure.figsize"] = fig_size #set figure size
+
 
 slim = tf.contrib.slim
 
@@ -127,29 +127,37 @@ slim = tf.contrib.slim
 
 upsample_factor = 32
 number_of_classes = 2
+
 log_folder = "c:/tmp/segmentation/log_folder"
 
+# 设置 checkpoint 文件的具体路径
 vgg_checkpoint_path = os.path.join(checkpoints_dir, 'vgg_16.ckpt')
 
 # Convert image to float32 before subtracting the mean pixel value
 image_float = tf.to_float(image_tensor, name='ToFloat')
 
 # Subtract the mean pixel value from each pixel
+# _mean_image_subtraction() 为私有函数
 mean_centered_image = _mean_image_subtraction(
              image_float, [_R_MEAN, _G_MEAN, _B_MEAN])
 
+# 在指定 axis方向对图像维度进行扩展 [1,Himg,Wimg,Cimg]
 processed_images = tf.expand_dims(mean_centered_image, 0)
 
+# 上采样 weights 维度为 [filter_size,filter_size,num_clas, num_class]
 upsample_filter_np = bilinear_upsample_weights(
                       upsample_factor, number_of_classes)
 
+# 以上采样 weights值 创建具有相同值的常数 Tensor
 upsample_filter_tensor = tf.constant(upsample_filter_np)
 
 # Define the model that we want, and specify two classes at the last layer
-with slim.arg_scope(vgg.vgg_arg_scope()):    
+with slim.arg_scope(vgg.vgg_arg_scope()):  
+	# 在 vgg_arg_scope范围内，调用 vgg_16 函数
+	# 如果 num_classes = 3的话，整个图像是否会分成 [background, object1,object2] 呢？  
     logits, end_points = vgg.vgg_16(processed_images, num_classes=2,
-                           is_training=is_training_placeholder,
-                           spatial_squeeze=False, fc_conv_padding='SAME')
+                           			is_training=is_training_placeholder,
+                           			spatial_squeeze=False, fc_conv_padding='SAME')
 
 downsampled_logits_shape = tf.shape(logits)
 
