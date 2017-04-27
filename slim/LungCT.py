@@ -22,114 +22,22 @@ import numpy as np
 import SimpleITK as sitk # 医学图像读取 
 
 #--------------------------------------------------------------
+# 读取单幅图像
 ImgFile = "E:\\Luna16\\subset0\\1.3.6.1.4.1.14519.5.2.1.6279.6001.105756658031515062000744821260.mhd"
 inputImg =sitk.ReadImage(ImgFile)
 
 # read all of 3D CT image with extention '.mhd'
 ImgPath = "E:\\Luna16\\subset0"
 
+Img4D = []
 for fileName in os.listdir(ImgPath):
-    if file.endswith(".mhd"):
+    if fileName.endswith(".mhd"):
         Img3D =sitk.ReadImage(os.path.join(ImgPath, fileName))
-        Img4D = np.stack(Img3D, axis=2) # stack 3D image to 4D image along the 'axie'
+        Img4D.append(Img3D)
+        # = np.stack(Img3D, axis=2) # stack 3D image to 4D image along the 'axie'
 
 
 # print(inputImg) # 打印 inputImg具有的图像信息，如 size和 spacing
-# output =sitk.DiscreteGaussianFilter(inputImg, 1.0, 5)
-# Create an image
-# image =sitk.Image(256, 256, 256,sitk.sitkInt16);
-# How about 2d?
-# twoD =sitk.Image(64, 64,sitk.sitkFloat32 )
-
-# Addressing pixels
-# image.GetPixel(0, 0, 0)
-# image.SetPixel(0, 0, 0, 1)
-# image.GetPixel(0, 0, 0)
-
-# image[0, 0, 0]  		# shorthand for Image.GetPixel(0,0,0)
-# image[0, 0, 0] = 10	# shorthand for Image.SetPixel(0,0,0,10)
-# image[0, 0, 0]
-# 
-# b =sitk.Image(image)	# Clone image
-
-#sitk.Show(image) 	# show image
-#
-# Simple smoothing
-# smooth =sitk.SmoothingRecursiveGaussian(image, 2.0)
-#sitk.Showsitk.Subtract(image, smooth))
-
-#1 # Much better
-# print("Before: ", smooth.GetPixelIDTypeAsString())
-# smooth =sitk.Cast(smooth, image.GetPixelIDValue())
-# print("After: ", smooth.GetPixelIDTypeAsString())
-#sitk.Showsitk.Subtract(image, smooth), "DiffWithGaussian")
-
-# # Extract
-# size = [ 6 4 , 64 , 1 ]
-# start = [ 6 4 , 0 , 0 ]
-#sitk.Showsitk.Extract(image, size, start), "Extracted")
-# Use pixel - wise operators
-#sitk.Show(127*image + 127sitk.BinaryErode(image), "ThinErosion")
-#
-#sitk.Hash(image + 2)
-#sitk.Hashsitk.AddConstantTo(image, 2))
-#sitk.Hash(image * 2)
-#sitk.Hashsitk.MultiplyByConstant(image, 2))
-
-## quick visualizations of masked image
-#sitk.Show(image * mask)
-#sitk.Show(0.5*image*~mask+image*mask)
-# 
-# import sys
-# if len(sys.argv) < 4:
-# 	print("Usage: SimpleGaussian <input> <sigma> <output>");
-# sys.exit(1)
-# reader =sitk.ImageFileReader()
-# reader.SetFileName(sys.argv[1])
-# image = reader.Execute()
-# pixelID = image.GetPixelIDValue()
-# gaussian =sitk.SmoothingRecursiveGaussianImageFilter()
-# gaussian.SetSigma(float(sys.argv[2]))
-# image = gaussian.Execute(image)
-# caster =sitk.CastImageFilter()
-# caster.SetOutputPixelType(pixelID)
-# image = caster.Execute(image)
-# writer =sitk.ImageFileWriter()
-# writer.SetFileName(sys.argv[3])
-# writer.Execute(image);
-
-
-
-
-# import SimpleITK as sitk
- 
-# #read the images
-# fixed_image =  sitk.ReadImage('training_001_ct.mha', sitk.sitkFloat32)
-# moving_image = sitk.ReadImage('training_001_mr_T1.mha', sitk.sitkFloat32) 
-#  
-# #initial alignment of the two volumes
-# transform = sitk.CenteredTransformInitializer(fixed_image, moving_image, 
-# 												sitk.Euler3DTransform(), 
-# 												sitk.CenteredTransformInitializerFilter.GEOMETRY) 
-# 
-# #multi-resolution rigid registration using Mutual Information
-# registration_method = sitk.ImageRegistrationMethod()
-# registration_method.SetMetricAsMattesMutualInformation(numberOfHistogramBins=50)
-# registration_method.SetMetricSamplingStrategy(registration_method.RANDOM)
-# registration_method.SetMetricSamplingPercentage(0.01)
-# registration_method.SetInterpolator(sitk.sitkLinear)
-# registration_method.SetOptimizerAsGradientDescent(learningRate=1.0, 
-# 													numberOfIterations=100, 
-# 													convergenceMinimumValue=1e-6,
-# 													convergenceWindowSize=10)
-# registration_method.SetOptimizerScalesFromPhysicalShift()
-# registration_method.SetShrinkFactorsPerLevel(shrinkFactors = [4,2,1])
-# registration_method.SetSmoothingSigmasPerLevel(smoothingSigmas=[2,1,0])
-# registration_method.SmoothingSigmasAreSpecifiedInPhysicalUnitsOn()
-# registration_method.SetInitialTransform(transform)
-# registration_method.Execute(fixed_image, moving_image) 
-# 
-# sitk.WriteTransform(transform, 'ct2mrT1.tfm')
 #--------------------------------------------------------------
 
 
