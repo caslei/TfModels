@@ -55,7 +55,7 @@ def bilinear_upsample_weights(factor, number_of_classes):
     for i in range(number_of_classes):        
         weights[:, :, i, i] = upsample_kernel
     
-    return weights #维度为 [filter_size,filter_size, num_class,num_class]
+    return weights #维度为 [filSize,filSize, num_class,num_class]
 
 
 #---------------------------------------------------------------
@@ -75,7 +75,7 @@ image_placeholder       = tf.placeholder(tf.string)
 annotation_placeholder  = tf.placeholder(tf.string)
 is_training_placeholder = tf.placeholder(tf.bool)
 
-feed_dict_to_use = {image_placeholder: image,
+feed_dict_to_use = {image_placeholder:      image,
                     annotation_placeholder: annotation,
                     is_training_placeholder: True}
 
@@ -91,11 +91,16 @@ annotation_tensor = tf.read_file(annotation_placeholder)
 image_tensor = tf.image.decode_jpeg(image_tensor, channels=3)
 annotation_tensor = tf.image.decode_png(annotation_tensor, channels=1)
 
+# 如果为 3D CT 图像是不是就不需要解码 decode？？？？？？？
+
+
 # Get ones for each class instead of a number -- we need that
 # for cross-entropy loss later on. Sometimes the groundtruth
 # masks have values other than 1 and 0. 
 class_labels_tensor = tf.equal(annotation_tensor, 1) # True or False
 background_labels_tensor = tf.not_equal(annotation_tensor, 1)
+
+# 找到内标签对应的 index，然后将类标签转化为可实际操作的数值 
 
 # Convert the boolean values into floats 
 bit_mask_class = tf.to_float(class_labels_tensor)
@@ -103,13 +108,12 @@ bit_mask_background = tf.to_float(background_labels_tensor)
 
 #Concatenates tensors along one dimension (0:row,1:column,2:page)
 # 沿着指定的 axis 将 values 中的 tensor 链接起来
-combined_mask = tf.concat(axis=2,
-                values=[bit_mask_class, bit_mask_background])
+combined_mask = tf.concat(axis=2, values=[bit_mask_class, bit_mask_background])
 
-# Lets reshape our input so that it becomes suitable for 
+# reshape input becomes it has different dimensions with  
 # tf.softmax_cross_entropy_with_logits with [batch_size, num_classes]
 flat_labels = tf.reshape(tensor=combined_mask, shape=(-1, 2))
-# reshape to [len(combined_mask)/2, 2]
+# "-1"表示其对应具体值需间接计算。本例 shape为 [len(combined_mask)/2, 2]
 
 #---------------------------------------------------------------
 
@@ -120,9 +124,9 @@ plt.rcParams["figure.figsize"] = fig_size #set figure size
 
 slim = tf.contrib.slim
 
-# Load the mean pixel values and the function
-# that performs the subtraction from each pixel
-#from preprocessing.vgg_preprocessing import \
+# Load pixel mean and the function that performs pixel-wise subtraction
+#
+# from preprocessing.vgg_preprocessing import \
 # ( _mean_image_subtraction, _R_MEAN, _G_MEAN, _B_MEAN)
 
 upsample_factor = 32
@@ -130,16 +134,13 @@ number_of_classes = 2
 
 log_folder = "c:/tmp/segmentation/log_folder"
 
-# 设置 checkpoint 文件的具体路径
-vgg_checkpoint_path = os.path.join(checkpoints_dir, 'vgg_16.ckpt')
-
 # Convert image to float32 before subtracting the mean pixel value
 image_float = tf.to_float(image_tensor, name='ToFloat')
 
 # Subtract the mean pixel value from each pixel
 # _mean_image_subtraction() 为私有函数
 mean_centered_image = _mean_image_subtraction(
-             image_float, [_R_MEAN, _G_MEAN, _B_MEAN])
+                image_float, [_R_MEAN, _G_MEAN, _B_MEAN])
 
 # 在指定 axis方向对图像维度进行扩展 [1,Himg,Wimg,Cimg]
 processed_images = tf.expand_dims(mean_centered_image, 0)
@@ -151,10 +152,16 @@ upsample_filter_np = bilinear_upsample_weights(
 # 以上采样 weights值 创建具有相同值的常数 Tensor
 upsample_filter_tensor = tf.constant(upsample_filter_np)
 
+#---------------------------------------------------------------
+# 设置 checkpoint 文件的具体路径
+vgg_checkpoint_path = os.path.join(checkpoints_dir, 'vgg_16.ckpt')
+
 # Define the model that we want, and specify two classes at the last layer
 with slim.arg_scope(vgg.vgg_arg_scope()):  
     # 在 vgg_arg_scope范围内，调用 vgg_16 函数
     # 如果 num_classes = 3的话，整个图像是否会分成 [background, object1,object2] 呢？  
+    # 
+    # 
     logits, end_points = vgg.vgg_16(processed_images, num_classes=2,
                                     is_training=is_training_placeholder,
                                     spatial_squeeze=False, fc_conv_padding='SAME')
