@@ -47,8 +47,8 @@ def bilinear_upsample_weights(factor, number_of_classes):
     filter_size = get_kernel_size(factor)
     
     weights = np.zeros(
-    	(filter_size, filter_size, number_of_classes, number_of_classes)
-        							                  , dtype=np.float32)
+        (filter_size, filter_size, number_of_classes, number_of_classes)
+                                                      , dtype=np.float32)
     
     upsample_kernel = upsample_filt(filter_size)
     
@@ -71,7 +71,7 @@ checkpoints_dir = "C:/tmp/my_checkpoint"
 image = "C:/tmp/segmentation/data/cat.jpg"
 annotation = "C:/tmp/segmentation/data/cat_annotation.png"
 
-image_placeholder 		= tf.placeholder(tf.string)
+image_placeholder       = tf.placeholder(tf.string)
 annotation_placeholder  = tf.placeholder(tf.string)
 is_training_placeholder = tf.placeholder(tf.bool)
 
@@ -153,11 +153,11 @@ upsample_filter_tensor = tf.constant(upsample_filter_np)
 
 # Define the model that we want, and specify two classes at the last layer
 with slim.arg_scope(vgg.vgg_arg_scope()):  
-	# 在 vgg_arg_scope范围内，调用 vgg_16 函数
-	# 如果 num_classes = 3的话，整个图像是否会分成 [background, object1,object2] 呢？  
+    # 在 vgg_arg_scope范围内，调用 vgg_16 函数
+    # 如果 num_classes = 3的话，整个图像是否会分成 [background, object1,object2] 呢？  
     logits, end_points = vgg.vgg_16(processed_images, num_classes=2,
-                           			is_training=is_training_placeholder,
-                           			spatial_squeeze=False, fc_conv_padding='SAME')
+                                    is_training=is_training_placeholder,
+                                    spatial_squeeze=False, fc_conv_padding='SAME')
 
 downsampled_logits_shape = tf.shape(logits)
 
