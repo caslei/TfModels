@@ -63,19 +63,26 @@ def bilinear_upsample_weights(factor, number_of_classes):
 # Only device 1 will be seen
 os.environ["CUDA_VISIBLE_DEVICES"] = '1'
 
+# 设置系统路径
 sys.path.append("E:/TfModels/slim/")
 checkpoints_dir = "C:/tmp/my_checkpoint"
 
+# 图像路径，程序只测试单幅 2D图像，若为 4D (Nimg,Himg,Wimg,Simg) 图像给如何操作？
 image = "C:/tmp/segmentation/data/cat.jpg"
 annotation = "C:/tmp/segmentation/data/cat_annotation.png"
 
-image_placeholder = tf.placeholder(tf.string)
-annotation_placeholder = tf.placeholder(tf.string)
+image_placeholder 		= tf.placeholder(tf.string)
+annotation_placeholder  = tf.placeholder(tf.string)
 is_training_placeholder = tf.placeholder(tf.bool)
 
 feed_dict_to_use = {image_placeholder: image,
                     annotation_placeholder: annotation,
                     is_training_placeholder: True}
+                    
+#---------------------------------------------------------------
+# 思考多幅图像 3D CT 图像的时候该如何操作？？？？？？？？？？？？？？
+#---------------------------------------------------------------
+
 
 image_tensor = tf.read_file(image_placeholder)
 annotation_tensor = tf.read_file(annotation_placeholder)
