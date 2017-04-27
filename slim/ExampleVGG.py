@@ -242,8 +242,18 @@ vgg_except_fc8_weights = slim.get_variables_to_restore(exclude=['vgg_16/fc8', 'a
 vgg_fc8_weights = slim.get_variables_to_restore(include=['vgg_16/fc8'])
 
 adam_optimizer_variables = slim.get_variables_to_restore(include=['adam_vars'])
-#-----------------------------------------------------------------------------------------
 
+# Create an OP that performs the initialization of values of variables
+# to the values from VGG. #将VGG模型中的参数值赋值给本例中的变量
+read_vgg_weights_except_fc8_func = slim.assign_from_checkpoint_fn(
+                                   vgg_checkpoint_path, vgg_except_fc8_weights)
+
+# Initializer for new fc8 weights -- for two classes.
+vgg_fc8_weights_initializer = tf.variables_initializer(vgg_fc8_weights)
+
+# Initializer for adam variables
+optimization_variables_initializer = tf.variables_initializer(adam_optimizer_variables)
+#-----------------------------------------------------------------------------------------
 
 #-----------------------------------------------------------------
 # Add summary op for the loss - to see it in tensorboard.
@@ -255,33 +265,20 @@ merged_summary_op = tf.summary.merge_all()
 # Create the summary writer to write all the logs into a specified file. 
 # This file can be later read by tensorboard.
 summary_string_writer = tf.summary.FileWriter(log_folder)
-#-----------------------------------------------------------------
 
 # Create the log folder if doesn't exist yet
 if not os.path.exists(log_folder):
     os.makedirs(log_folder)
-
-# Create an OP that performs the initialization of values of variables
-# to the values from VGG. #将VGG模型中的参数值赋值给本例中的变量
-read_vgg_weights_except_fc8_func = slim.assign_from_checkpoint_fn(
-                                   vgg_checkpoint_path,
-                                   vgg_except_fc8_weights)
-
-# Initializer for new fc8 weights -- for two classes.
-vgg_fc8_weights_initializer = tf.variables_initializer(vgg_fc8_weights)
-
-# Initializer for adam variables
-optimization_variables_initializer = tf.variables_initializer(
-                                            adam_optimizer_variables)
+#-----------------------------------------------------------------
 
 with tf.Session() as sess:    
-    read_vgg_weights_except_fc8_func(sess)  # Run the initializers.
+    read_vgg_weights_except_fc8_func(sess)  # 初始化变量.
     sess.run(vgg_fc8_weights_initializer)
     sess.run(optimization_variables_initializer)
+    # 初始化训练图像和其对应的标签
+    train_image, train_annotation = sess.run([image_tensor, annotation_tensor], feed_dict=feed_dict_to_use)
     
-    train_image, train_annotation = sess.run(
-          [image_tensor, annotation_tensor], feed_dict=feed_dict_to_use)
-    
+    #-----------------------------------------------------------------
     fig, (ax1, ax2) = plt.subplots(1, 2, sharey=True)
     ax1.imshow(train_image)
     ax1.set_title('Input image')
@@ -290,19 +287,19 @@ with tf.Session() as sess:
     #plt.ion()
     #plt.show()
     fig.savefig('tmp_start.png', dpi=fig.dpi)
+    #-----------------------------------------------------------------
     
     # Let's perform 10 interations
-    for i in range(40):        
-        loss, summary_string = sess.run(
-         [cross_entropy_sum, merged_summary_op], feed_dict=feed_dict_to_use)
-        
-        sess.run(train_step, feed_dict=feed_dict_to_use)
-        
-        pred_np, probabilities_np = sess.run(
-         [pred, probabilities], feed_dict=feed_dict_to_use)
-        
+    for i in range(40):
+        # 初始化 loss和 summary
+        loss, summary_string = sess.run([cross_entropy_sum, merged_summary_op], feed_dict=feed_dict_to_use)
+        pred_np, probabilities_np = sess.run([pred, probabilities], feed_dict=feed_dict_to_use)
+
+        sess.run(train_step, feed_dict=feed_dict_to_use) # 正式开始训练操作
+
         summary_string_writer.add_summary(summary_string, i)
         
+        #-----------------------------------------------------------------
         if i % 5 == 0:
             cmap = plt.get_cmap('bwr')
             fig, (ax1, ax2) = plt.subplots(1, 2, sharey=True)
@@ -311,16 +308,18 @@ with tf.Session() as sess:
             probability_graph = ax2.imshow(probabilities_np.squeeze()[:, :, 0])
             ax2.set_title('Probability of the Class. Iteration # ' + str(i))
             plt.colorbar(probability_graph)
-        #plt.ion()
-        #plt.show()
+            #plt.ion()
+            #plt.show()
             fig.savefig('tmp_'+ str(i) +".png", dpi=fig.dpi)
+        #-----------------------------------------------------------------
         
         print("Current Loss: " +  str(loss))
     
-    feed_dict_to_use[is_training_placeholder] = False    
-    final_predictions, final_probabilities, final_loss = sess.run(
-        [pred, probabilities, cross_entropy_sum], feed_dict=feed_dict_to_use)
+    feed_dict_to_use[is_training_placeholder] = False
+    # 初始化处理
+    final_predictions, final_probabilities, final_loss = sess.run([pred, probabilities, cross_entropy_sum], feed_dict=feed_dict_to_use)
     
+    #-----------------------------------------------------------------
     fig, (ax1, ax2) = plt.subplots(1, 2, sharey=True)    
     ax1.imshow(np.uint8(final_predictions.squeeze() != 1), vmax=1.5, vmin=-0.4, cmap=cmap)
     ax1.set_title('Final Argmax') 
@@ -330,6 +329,7 @@ with tf.Session() as sess:
     #plt.ion()
     #plt.show()
     fig.savefig('tmp_final.png', dpi=fig.dpi)
+    #-----------------------------------------------------------------
     
     print("Final Loss: " +  str(final_loss))
     
