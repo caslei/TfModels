@@ -9,28 +9,32 @@ import tensorflow as tf
 import numpy as np
 from matplotlib import pyplot as plt
 import urllib
-from nets import vgg
+from nets import vgg  # 从 nets 文件夹中载入 vgg.py 文件
 from preprocessing import vgg_preprocessing
-from preprocessing.vgg_preprocessing import (_mean_image_subtraction, 
-                                        _R_MEAN, _G_MEAN, _B_MEAN) #RGB
+from preprocessing.vgg_preprocessing import 
+            (_mean_image_subtraction, _R_MEAN, _G_MEAN, _B_MEAN) #RGB
+# import语句后面的括号 '()' 是否可以省略？？？？？
 
 
-def get_kernel_size(factor):
+def get_kernel_size(factor): #
     """Find the kernel size given the desired factor of upsampling."""
     return 2 * factor - factor % 2
 
 def upsample_filt(size):
     """
-    Make a 2D bilinear kernel suitable for upsampling of the given size (h,w).
+    Make a 2D bilinear kernel for upsampling of the given size (h,w).
     """
+    #构造一个 size by size 的2D 双线性滤波器 
     factor = (size + 1) // 2
     if size % 2 == 1:
         center = factor - 1
     else:
         center = factor - 0.5
+
     og = np.ogrid[:size, :size]
     return (1 - abs(og[0] - center) / factor) * \
-           (1 - abs(og[1] - center) / factor)
+           (1 - abs(og[1] - center) / factor) 
+           # size*1 和 1*size 向量乘法得到 size*size的矩阵
 
     # np.ogrid[:5,:5] ==>[array([[0],[1],[2],[3],[4]]^T),
     #                     array([[0],[1],[2],[3],[4]]  )]
@@ -42,18 +46,21 @@ def bilinear_upsample_weights(factor, number_of_classes):
     """
     filter_size = get_kernel_size(factor)
     
-    weights = np.zeros((filter_size, filter_size, number_of_classes, 
-                            number_of_classes), dtype=np.float32)
+    weights = np.zeros(
+    	(filter_size, filter_size, number_of_classes, number_of_classes)
+        							                  , dtype=np.float32)
     
     upsample_kernel = upsample_filt(filter_size)
     
     for i in range(number_of_classes):        
         weights[:, :, i, i] = upsample_kernel
     
-    return weights
+    return weights #维度为 [filter_size,filter_size, num_class,num_class]
 
 
 #---------------------------------------------------------------
+# tensorflow默认使用电脑的全部 GPU，若只使用部分 GPU，可设置 CUDA_VISIBLE_DEVICES
+# Only device 1 will be seen
 os.environ["CUDA_VISIBLE_DEVICES"] = '1'
 
 sys.path.append("E:/TfModels/slim/")
