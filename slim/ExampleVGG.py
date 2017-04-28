@@ -275,6 +275,7 @@ with tf.Session() as sess:
     read_vgg_weights_except_fc8_func(sess)  # 初始化变量.
     sess.run(vgg_fc8_weights_initializer)
     sess.run(optimization_variables_initializer)
+    
     # 初始化训练图像和其对应的标签
     train_image, train_annotation = sess.run([image_tensor, annotation_tensor], feed_dict=feed_dict_to_use)
     
@@ -330,7 +331,7 @@ with tf.Session() as sess:
     #plt.show()
     fig.savefig('tmp_final.png', dpi=fig.dpi)
     #-----------------------------------------------------------------
-    
+
     print("Final Loss: " +  str(final_loss))
     
 summary_string_writer.close()
