@@ -56,32 +56,36 @@ print(check_output(["ls", "../input/sample_images/"]).decode("utf8"))
 
 
 # Any results you write to the current directory are saved as output.
-lung = dicom.read_file('../input/sample_images/00cba091fa4ad62cc3200a657aeb957e/38c4ff5d36b5a6b6dc025435d62a143d.dcm')
+lung = dicom.read_file('../input/sample_images/38c4ff5d36b5a6b6dc025435d62a143d.dcm')
 
-slice = lung.pixel_array
+slice = lung.pixel_array # 获取 dcm的灰度值矩阵
 slice[slice == -2000] = 0
 plt.imshow(slice, cmap=plt.cm.gray)
 
 
 
 def read_ct_scan(folder_name):
-        # Read the slices from the dicom file
+        # 读取所有的单幅 dcm文件，形成一个 3D体数据
         slices = [dicom.read_file(folder_name + filename) for filename in os.listdir(folder_name)]
         
         # Sort the dicom slices in their respective order
-        slices.sort(key=lambda x: int(x.InstanceNumber))
+        slices.sort(key=lambda x: int(x.InstanceNumber)) # InstanceNumber是dicom格式自带的一个参数
         
         # Get the pixel values for all the slices
-        slices = np.stack([s.pixel_array for s in slices])
+        slices = np.stack([s.pixel_array for s in slices]) #从 3D体数据中逐次读取灰度值矩阵
         slices[slices == -2000] = 0
         return slices
 
-ct_scan = read_ct_scan('../input/sample_images/00cba091fa4ad62cc3200a657aeb957e/') 
+ct_scan = read_ct_scan('../input/sample_images/') 
 
 
 
 def plot_ct_scan(scan):
-    f, plots = plt.subplots(int(scan.shape[0] / 20) + 1, 4, figsize=(25, 25))
+	# 指定 subplot的行数和列数，figsize的长和宽为25
+	# plt.subplots: returns a tuple containing a figure and axes object. 
+	# 产生多个子窗口，并以 numpy数组的方式保存在 axes中，可通过对axes进行索引访问每个子窗口。
+	# fig是整个图像对象，
+    fig, plots = plt.subplots(int(scan.shape[0] / 20) + 1, 4, figsize=(25, 25))
     for i in range(0, scan.shape[0], 5):
         plots[int(i / 20), int((i % 20) / 5)].axis('off')
         plots[int(i / 20), int((i % 20) / 5)].imshow(scan[i], cmap=plt.cm.bone) 
