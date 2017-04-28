@@ -124,10 +124,10 @@ def get_segmented_lungs(im, plot=False):
     if plot == True:
         plots[2].axis('off')
         plots[2].imshow(label_image, cmap=plt.cm.bone) 
-    '''
-    Step 4: Keep the labels with 2 largest areas.
-    '''
-    areas = [r.area for r in regionprops(label_image)]
+
+    ''' Step 4: Keep the labels with 2 largest areas '''
+    # 计算所有标记区域的面积，注意 [f(i) for i in list] 这种语法
+    areas = [r.area for r in regionprops(label_image)] # from skimage.measure
     areas.sort()
     if len(areas) > 2:
         for region in regionprops(label_image):
