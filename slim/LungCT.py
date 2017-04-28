@@ -102,17 +102,18 @@ def get_segmented_lungs(im, plot=False):
     '''
     if plot == True:
         f, plots = plt.subplots(8, 1, figsize=(5, 40))
-    '''
-    Step 1: Convert into a binary image. 
-    '''
-    binary = im < 604
+
+    '''  Step 1: Convert into a binary image.  '''
+    # 灰度值阈值化
+    binary = im < 604 
+
     if plot == True:
         plots[0].axis('off')
         plots[0].imshow(binary, cmap=plt.cm.bone) 
-    '''
-    Step 2: Remove the blobs connected to the border of the image.
-    '''
-    cleared = clear_border(binary)
+
+    '''Step 2: Remove the blobs connected to the border of the image'''
+    #
+    cleared = clear_border(binary) # clear_border()来自于scikit_image 
     if plot == True:
         plots[1].axis('off')
         plots[1].imshow(cleared, cmap=plt.cm.bone) 
