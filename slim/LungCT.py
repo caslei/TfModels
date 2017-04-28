@@ -26,6 +26,21 @@ import SimpleITK as sitk # 医学图像读取
 ImgFile = "E:\\Luna16\\subset0\\1.3.6.1.4.1.14519.5.2.1.6279.6001.105756658031515062000744821260.mhd"
 inputImg =sitk.ReadImage(ImgFile)
 
+print(inputImg.GetPixelIDTypeAsString()) # 检查图像灰度值的数据类型，判断是否 float类型
+Img3D = sitk.Cast(inputImg, sitk.sitkFloat32) # 将图像类型转化为float
+
+print(inputImg.GetHeight(), inputImg.GetWidth(), inputImg.GetDepth()) # 图像shape
+print(inputImg.GetDimension()) # 图像维度
+sitk.Show(inputImg) # 显示图像
+
+nda = sitk.GetArrayFromImgae(inputImg) # sitk.image 到 np.array
+img = sitk.GetImageFromArray(nda)   # 从 np.array到sitk.image
+
+sitk.WriteImage(img, os.path.join(OUTPUT_DIR, 'sitkImg.mha')) # 保存文件
+#--------------------------------------------------------------
+
+
+
 # read all of 3D CT image with extention '.mhd'
 ImgPath = "E:\\Luna16\\subset0"
 
@@ -53,9 +68,7 @@ def get_segmented_lungs3D(Img3D, threshold=604):
 
     '''Step 3: Label the image '''
     label_image = label(cleared)
-    if plot == True:
-        plots[2].axis('off')
-        plots[2].imshow(label_image, cmap=plt.cm.bone) 
+
     '''
     Step 4: Keep the labels with 2 largest areas.
     '''
@@ -65,47 +78,36 @@ def get_segmented_lungs3D(Img3D, threshold=604):
         for region in regionprops(label_image):
             if region.area < areas[-2]:
                 for coordinates in region.coords:                
-                       label_image[coordinates[0], coordinates[1]] = 0
+                       label_image[coordinates[0], coordinates[1], coordinates[2]] = 0
     binary = label_image > 0
-    if plot == True:
-        plots[3].axis('off')
-        plots[3].imshow(binary, cmap=plt.cm.bone) 
+ 
     '''
     Step 5: Erosion operation with a disk of radius 2. This operation is 
     seperate the lung nodules attached to the blood vessels.
     '''
     selem = disk(2)
     binary = binary_erosion(binary, selem)
-    if plot == True:
-        plots[4].axis('off')
-        plots[4].imshow(binary, cmap=plt.cm.bone) 
+
     '''
     Step 6: Closure operation with a disk of radius 10. This operation is 
     to keep nodules attached to the lung wall.
     '''
     selem = disk(10)
     binary = binary_closing(binary, selem)
-    if plot == True:
-        plots[5].axis('off')
-        plots[5].imshow(binary, cmap=plt.cm.bone) 
+
     '''
     Step 7: Fill in the small holes inside the binary mask of lungs.
     '''
     edges = roberts(binary)
     binary = ndi.binary_fill_holes(edges)
-    if plot == True:
-        plots[6].axis('off')
-        plots[6].imshow(binary, cmap=plt.cm.bone) 
+
     '''
     Step 8: Superimpose the binary mask on the input image.
     '''
     get_high_vals = binary == 0
-    im[get_high_vals] = 0
-    if plot == True:
-        plots[7].axis('off')
-        plots[7].imshow(im, cmap=plt.cm.bone) 
+    Img3D[get_high_vals] = 0
         
-    return im
+    return Img3DImg3D
 #--------------------------------------------------------------
 
 
@@ -129,10 +131,7 @@ def get_segmented_lungs3D(Img3D, threshold=604):
 
 
 
-<<<<<<< HEAD
 
-=======
->>>>>>> fa81701fd0da086e6de3a8bad462d08b578bf602
 
 
 
@@ -145,9 +144,10 @@ slice[slice == -2000] = 0
 plt.imshow(slice, cmap=plt.cm.gray)
 
 
-
+#--------------------------------------------------------------
 def read_ct_scan(folder_name):
         # 读取所有的单幅 dcm文件，形成一个 3D体数据
+        # slices是一个 list类型
         slices = [dicom.read_file(folder_name + filename) for filename in os.listdir(folder_name)]
         
         # Sort the dicom slices in their respective order
@@ -157,23 +157,19 @@ def read_ct_scan(folder_name):
         slices = np.stack([s.pixel_array for s in slices]) #从 3D体数据中逐次读取灰度值矩阵
         slices[slices == -2000] = 0
         return slices
+#--------------------------------------------------------------
+
+
 
 ct_scan = read_ct_scan('../input/sample_images/') 
 
 
 
 def plot_ct_scan(scan):
-<<<<<<< HEAD
     # 指定 subplot的行数和列数，figsize的长和宽为25
     # plt.subplots: returns a tuple containing a figure and axes object. 
     # 产生多个子窗口，并以 numpy数组的方式保存在 axes中，可通过对axes进行索引访问每个子窗口。
     # fig是整个图像对象，
-=======
-	# 指定 subplot的行数和列数，figsize的长和宽为25
-	# plt.subplots: returns a tuple containing a figure and axes object. 
-	# 产生多个子窗口，并以 numpy数组的方式保存在 axes中，可通过对axes进行索引访问每个子窗口。
-	# fig是整个图像对象，
->>>>>>> fa81701fd0da086e6de3a8bad462d08b578bf602
     fig, plots = plt.subplots(int(scan.shape[0] / 20) + 1, 4, figsize=(25, 25))
     for i in range(0, scan.shape[0], 5):
         plots[int(i / 20), int((i % 20) / 5)].axis('off')
@@ -268,7 +264,6 @@ return im
 
 get_segmented_lungs(ct_scan[71], True)
 
-<<<<<<< HEAD
 
 #--------------------------------------------------------------
 def segment_lung_from_ct_scan(ct_scan):
@@ -288,9 +283,6 @@ def plot_3d(image, threshold=-300):
     p = p[:,:,::-1]
     
     verts, faces = measure.marching_cubes(p, threshold)
-=======
-get_segmented_lungs(ct_scan[71], True)
->>>>>>> fa81701fd0da086e6de3a8bad462d08b578bf602
 
     fig = plt.figure(figsize=(10, 10))
     ax = fig.add_subplot(111, projection='3d')
@@ -309,28 +301,14 @@ get_segmented_lungs(ct_scan[71], True)
 #--------------------------------------------------------------
 
 
-<<<<<<< HEAD
-
-
-
-
-
-
-
-
-
-
-
-
 plot_3d(segmented_ct_scan, 604)
 
-=======
+
 #-------------------------------------------------------------------
 # 				2017-04-27
 #-------------------------------------------------------------------
 segmented_ct_scan = segment_lung_from_ct_scan(ct_scan)
 plot_ct_scan(segmented_ct_scan)
->>>>>>> fa81701fd0da086e6de3a8bad462d08b578bf602
 
 segmented_ct_scan[segmented_ct_scan < 604] = 0
 plot_ct_scan(segmented_ct_scan)
