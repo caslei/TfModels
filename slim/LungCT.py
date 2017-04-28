@@ -129,7 +129,10 @@ def get_segmented_lungs3D(Img3D, threshold=604):
 
 
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> fa81701fd0da086e6de3a8bad462d08b578bf602
 
 
 
@@ -160,10 +163,17 @@ ct_scan = read_ct_scan('../input/sample_images/')
 
 
 def plot_ct_scan(scan):
+<<<<<<< HEAD
     # 指定 subplot的行数和列数，figsize的长和宽为25
     # plt.subplots: returns a tuple containing a figure and axes object. 
     # 产生多个子窗口，并以 numpy数组的方式保存在 axes中，可通过对axes进行索引访问每个子窗口。
     # fig是整个图像对象，
+=======
+	# 指定 subplot的行数和列数，figsize的长和宽为25
+	# plt.subplots: returns a tuple containing a figure and axes object. 
+	# 产生多个子窗口，并以 numpy数组的方式保存在 axes中，可通过对axes进行索引访问每个子窗口。
+	# fig是整个图像对象，
+>>>>>>> fa81701fd0da086e6de3a8bad462d08b578bf602
     fig, plots = plt.subplots(int(scan.shape[0] / 20) + 1, 4, figsize=(25, 25))
     for i in range(0, scan.shape[0], 5):
         plots[int(i / 20), int((i % 20) / 5)].axis('off')
@@ -258,6 +268,7 @@ return im
 
 get_segmented_lungs(ct_scan[71], True)
 
+<<<<<<< HEAD
 
 #--------------------------------------------------------------
 def segment_lung_from_ct_scan(ct_scan):
@@ -277,6 +288,9 @@ def plot_3d(image, threshold=-300):
     p = p[:,:,::-1]
     
     verts, faces = measure.marching_cubes(p, threshold)
+=======
+get_segmented_lungs(ct_scan[71], True)
+>>>>>>> fa81701fd0da086e6de3a8bad462d08b578bf602
 
     fig = plt.figure(figsize=(10, 10))
     ax = fig.add_subplot(111, projection='3d')
@@ -295,6 +309,7 @@ def plot_3d(image, threshold=-300):
 #--------------------------------------------------------------
 
 
+<<<<<<< HEAD
 
 
 
@@ -309,12 +324,16 @@ def plot_3d(image, threshold=-300):
 
 plot_3d(segmented_ct_scan, 604)
 
-
+=======
+#-------------------------------------------------------------------
+# 				2017-04-27
+#-------------------------------------------------------------------
+segmented_ct_scan = segment_lung_from_ct_scan(ct_scan)
+plot_ct_scan(segmented_ct_scan)
+>>>>>>> fa81701fd0da086e6de3a8bad462d08b578bf602
 
 segmented_ct_scan[segmented_ct_scan < 604] = 0
 plot_ct_scan(segmented_ct_scan)
-
-
 
 selem = ball(2)
 binary = binary_closing(segmented_ct_scan, selem)
