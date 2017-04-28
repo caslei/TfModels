@@ -112,15 +112,15 @@ def get_segmented_lungs(im, plot=False):
         plots[0].imshow(binary, cmap=plt.cm.bone) 
 
     '''Step 2: Remove the blobs connected to the border of the image'''
-    #
+    # 清除边界之外的 孤立目标
     cleared = clear_border(binary) # clear_border()来自于scikit_image 
     if plot == True:
         plots[1].axis('off')
         plots[1].imshow(cleared, cmap=plt.cm.bone) 
-    '''
-    Step 3: Label the image.
-    '''
-    label_image = label(cleared)
+
+    '''   Step 3: Label the image '''
+    # 将所有相邻的标记区域被设置为相同的灰度值
+    label_image = label(cleared) # 来自 skimage.measure
     if plot == True:
         plots[2].axis('off')
         plots[2].imshow(label_image, cmap=plt.cm.bone) 
