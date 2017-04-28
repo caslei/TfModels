@@ -310,9 +310,15 @@ plot_3d(segmented_ct_scan, 604)
 segmented_ct_scan = segment_lung_from_ct_scan(ct_scan)
 plot_ct_scan(segmented_ct_scan)
 
+
+
+#-------------------------------------------------------------------
+#对提取的肺部进行灰度值阈值化处理，将灰度值小于604的设置为0
 segmented_ct_scan[segmented_ct_scan < 604] = 0
 plot_ct_scan(segmented_ct_scan)
+#-------------------------------------------------------------------
 
+# 去除肺部的血管信息干扰
 selem = ball(2)
 binary = binary_closing(segmented_ct_scan, selem)
 
@@ -338,3 +344,12 @@ for r in regionprops(label_scan):
             segmented_ct_scan[c[0], c[1], c[2]] = 0
     else:
         index = (max((max_x - min_x), (max_y - min_y), (max_z - min_z))) / (min((max_x - min_x), (max_y - min_y) , (max_z - min_z)))
+
+#-------------------------------------------------------------------
+
+
+
+
+
+
+#-------------------------------------------------------------------        
