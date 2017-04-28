@@ -44,13 +44,7 @@ for fileName in os.listdir(ImgPath):
 
 
 
-# Input data files are available in the "../input/" directory.
-# For example, running this (by clicking run or pressing Shift+Enter) will list the files in the input directory
 
-from subprocess import check_output
-print(check_output(["ls", "../input"]).decode("utf8"))
-
-print(check_output(["ls", "../input/sample_images/"]).decode("utf8"))
 
 
 
@@ -128,13 +122,14 @@ def get_segmented_lungs(im, plot=False):
     ''' Step 4: Keep the labels with 2 largest areas '''
     # 计算所有标记区域的面积，注意 [f(i) for i in list] 这种语法
     areas = [r.area for r in regionprops(label_image)] # from skimage.measure
-    areas.sort()
+    areas.sort() # 从小到大的顺序排列
     if len(areas) > 2:
         for region in regionprops(label_image):
             if region.area < areas[-2]:
                 for coordinates in region.coords:                
                        label_image[coordinates[0], coordinates[1]] = 0
-    binary = label_image > 0
+
+    binary = label_image > 0 # 转化为 True & False
     if plot == True:
         plots[3].axis('off')
         plots[3].imshow(binary, cmap=plt.cm.bone) 
@@ -143,7 +138,7 @@ def get_segmented_lungs(im, plot=False):
     seperate the lung nodules attached to the blood vessels.
     '''
     selem = disk(2)
-    binary = binary_erosion(binary, selem)
+    binary = binary_erosion(binary, selem)  # from skimage.morphology
     if plot == True:
         plots[4].axis('off')
         plots[4].imshow(binary, cmap=plt.cm.bone) 
