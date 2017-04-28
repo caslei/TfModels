@@ -87,7 +87,7 @@ def plot_ct_scan(scan):
 plot_ct_scan(ct_scan)
 
 
-
+#-------------------------------------------------------------------
 
 def get_segmented_lungs(im, plot=False):
     
@@ -154,7 +154,7 @@ def get_segmented_lungs(im, plot=False):
     '''
     Step 7: Fill in the small holes inside the binary mask of lungs.
     '''
-    edges = roberts(binary)
+    edges = roberts(binary) # roberts边界提取算子
     binary = ndi.binary_fill_holes(edges)
     if plot == True:
         plots[6].axis('off')
@@ -162,7 +162,7 @@ def get_segmented_lungs(im, plot=False):
     '''
     Step 8: Superimpose the binary mask on the input image.
     '''
-    get_high_vals = binary == 0
+    get_high_vals = binary == 0 # 先计算逻辑判断 (binary==0)，然后赋值
     im[get_high_vals] = 0
     if plot == True:
         plots[7].axis('off')
@@ -171,24 +171,20 @@ def get_segmented_lungs(im, plot=False):
     return im
 
 
-
-
-    get_segmented_lungs(ct_scan[71], True)
-
-
+get_segmented_lungs(ct_scan[71], True)
 
 
 def segment_lung_from_ct_scan(ct_scan):
 	return np.asarray([get_segmented_lungs(slice) for slice in ct_scan])
 
+#-------------------------------------------------------------------
+# 				2017-04-27
+#-------------------------------------------------------------------
 segmented_ct_scan = segment_lung_from_ct_scan(ct_scan)
 plot_ct_scan(segmented_ct_scan)
 
-
 segmented_ct_scan[segmented_ct_scan < 604] = 0
 plot_ct_scan(segmented_ct_scan)
-
-
 
 selem = ball(2)
 binary = binary_closing(segmented_ct_scan, selem)
