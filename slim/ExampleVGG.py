@@ -2,7 +2,7 @@
 #https://github.com/warmspringwinds/tensorflow_notes/blob/master/image_segmentation_conditional_random_fields.ipynb
 
 from __future__ import division
-import os
+import os, time
 import sys
 import tensorflow as tf
 #import skimage.io as io
@@ -11,8 +11,7 @@ from matplotlib import pyplot as plt
 import urllib
 from nets import vgg  # 从 nets 文件夹中载入 vgg.py 文件
 from preprocessing import vgg_preprocessing
-from preprocessing.vgg_preprocessing import 
-            (_mean_image_subtraction, _R_MEAN, _G_MEAN, _B_MEAN) #RGB
+from preprocessing.vgg_preprocessing import (_mean_image_subtraction, _R_MEAN, _G_MEAN, _B_MEAN) #RGB
 # import语句后面的括号 '()' 是否可以省略？？？？？
 
 
@@ -283,7 +282,8 @@ with tf.Session() as sess:
     fig, (ax1, ax2) = plt.subplots(1, 2, sharey=True)
     ax1.imshow(train_image)
     ax1.set_title('Input image')
-    probability_graph = ax2.imshow(np.dstack((train_annotation,)*3)*100)
+    # np.dstack(): Stack arrays in sequence depth wise (along third dimension).
+    probability_graph = ax2.imshow(np.dstack((train_annotation,)*3)*100) 
     ax2.set_title('Input Ground-Truth Annotation')
     #plt.ion()
     #plt.show()
@@ -291,6 +291,7 @@ with tf.Session() as sess:
     #-----------------------------------------------------------------
     
     # Let's perform 10 interations
+    statTime = time.time()
     for i in range(40):
         # 初始化 loss和 summary
         loss, summary_string = sess.run([cross_entropy_sum, merged_summary_op], feed_dict=feed_dict_to_use)
@@ -313,8 +314,11 @@ with tf.Session() as sess:
             #plt.show()
             fig.savefig('tmp_'+ str(i) +".png", dpi=fig.dpi)
         #-----------------------------------------------------------------
-        
+  
+        print("endTime is :%d" % endTime)
         print("Current Loss: " +  str(loss))
+    
+    endTime = time.time() - stat  # the whole time for 100-loop
     
     feed_dict_to_use[is_training_placeholder] = False
     # 初始化处理
