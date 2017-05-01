@@ -75,8 +75,8 @@ def _crop(image, offset_height, offset_width, crop_height, crop_width):
 
   #-----------------------------------------------------------------------------
   # 断言图像rank的值为3，否则抛出异常信息（图像rank必须为3）， 
-  rank_assertion = tf.Assert(tf.equal(tf.rank(image), 3),
-                             ['Rank of image must be equal to 3.'])
+  rank_assertion = tf.Assert(tf.equal(tf.rank(image), 3), ['Rank of image must be equal to 3.'])
+
   # with_dependencies(dependencies, output_tensor, name=None) 
   # 只有所有的dependencies操作运行以后，才运行with_dependencies()语句,并返回 output_tensor
   cropped_shape = control_flow_ops.with_dependencies([rank_assertion],      
@@ -85,9 +85,9 @@ def _crop(image, offset_height, offset_width, crop_height, crop_width):
 
   # 断言original_shape >= crop_shape,否则返回异常"剪切图像超过原图像"
   size_assertion = tf.Assert( tf.logical_and(     
-                    tf.greater_equal(original_shape[0], crop_height),
-                    tf.greater_equal(original_shape[1], crop_width)),
-                          ['Crop size greater than the image size.'] )
+                          tf.greater_equal(original_shape[0], crop_height),
+                          tf.greater_equal(original_shape[1], crop_width)),
+                          ['Crop size greater than the image size.']      )
   
   # 将[offset_height, offset_width, 0]堆积为列向量，然后将其转为int32数据类型
   offsets = tf.to_int32(tf.stack([offset_height, offset_width, 0]))
@@ -95,8 +95,7 @@ def _crop(image, offset_height, offset_width, crop_height, crop_width):
   # Use tf.slice instead of crop_to_bounding box as it accepts tensors to
   # define the crop size.
   # tf.slice(input_, begin, size, name=None):从tensor中提取一张size大小的slice,
-  image = control_flow_ops.with_dependencies([size_assertion],
-                          tf.slice(image, offsets, cropped_shape))
+  image = control_flow_ops.with_dependencies([size_assertion], tf.slice(image, offsets, cropped_shape))
   #-----------------------------------------------------------------------------
   # tf.Assert()常与tf.control_dependencies()或control_flow_ops.with_dependencies()
   # 一起使用，确保assert_op执行后，才会执行dependencies范围内的其他语句
@@ -159,7 +158,7 @@ def _random_crop(image_list, crop_height, crop_width):
   crop_size_assert = tf.Assert(tf.logical_and(
                         tf.greater_equal(image_height, crop_height),
                         tf.greater_equal(image_width, crop_width)),
-                      ['Crop size greater than the image size.'])
+                        ['Crop size greater than the image size.'])
 
   asserts = [rank_assertions[0], crop_size_assert] # 记录 (rank异常 + 剪切异常)
   
