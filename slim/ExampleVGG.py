@@ -45,16 +45,15 @@ def bilinear_upsample_weights(factor, number_of_classes):
     """
     filter_size = get_kernel_size(factor)
     
-    weights = np.zeros(
-        (filter_size, filter_size, number_of_classes, number_of_classes)
-                                                      , dtype=np.float32)
+    weights = np.zeros((filter_size, filter_size, 
+                        number_of_classes, number_of_classes), dtype=np.float32)
     
     upsample_kernel = upsample_filt(filter_size)
     
     for i in range(number_of_classes):        
         weights[:, :, i, i] = upsample_kernel
     
-    return weights #维度为 [filSize,filSize, num_class,num_class]
+    return weights #维度为 [filSize, filSize, num_class, num_class]
 
 
 #---------------------------------------------------------------
